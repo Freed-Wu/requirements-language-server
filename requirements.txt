@@ -1,0 +1,7 @@
+#!/usr/bin/env -S pip install -r
+
+jinja2
+pip-cache
+pip-tools
+platformdirs
+pygls

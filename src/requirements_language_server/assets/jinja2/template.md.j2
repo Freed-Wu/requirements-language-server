@@ -1,0 +1,9 @@
+{{ info.summary }}
+
+- homepage: {% if info.homepage %}<{{ info.homepage }}>{% endif %}
+- author: **{{ info.author }}** {% if info.author_email %}`<{{ info.author_email }}>`{% endif %}
+- license: **{{ info.license }}**
+- requires:
+{%-for require in info.requires %}
+  {{ loop.index }}. *{{ require }}*
+{%-endfor %}
