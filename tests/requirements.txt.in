@@ -1,0 +1,8 @@
+#!/usr/bin/env pip-compile
+
+autopep7
+docutils
+wheel
+pip-tools
+pytest-pep8
+pytest-pythonpath
