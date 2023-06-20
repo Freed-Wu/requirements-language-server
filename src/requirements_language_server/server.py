@@ -18,6 +18,7 @@ from lsprotocol.types import (
     CompletionList,
     CompletionParams,
     Diagnostic,
+    DiagnosticSeverity,
     DidChangeTextDocumentParams,
     Hover,
     InitializeParams,
@@ -245,6 +246,7 @@ class RequirementsLanguageServer(LanguageServer):
                         Position(line, len(source.splitlines()[line])),
                     ),
                     message=msg,
+                    severity=DiagnosticSeverity.Error,
                     source="pip-compile",
                 )
                 for line, msg in diagnostic(params.text_document.uri).items()
