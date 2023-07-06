@@ -25,6 +25,10 @@ def get_parser() -> ArgumentParser:
         epilog=EPILOG,
         formatter_class=RawDescriptionHelpFormatter,
     )
+    with suppress(ImportError):
+        import shtab
+
+        shtab.add_argument_to(parser)
     parser.add_argument("--version", version=VERSION, action="version")
     parser.add_argument(
         "--print-config",
@@ -36,10 +40,6 @@ def get_parser() -> ArgumentParser:
         action="store_true",
         help="generate cache",
     )
-    with suppress(ImportError):
-        import shtab
-
-        shtab.add_argument_to(parser)
     return parser
 
 
