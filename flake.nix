@@ -11,8 +11,7 @@
         {
           formatter = nixpkgs-fmt;
           packages.default = buildPythonApplication rec {
-            pname = "portage-language-server";
-            version = "";
+            name = "portage-language-server";
             src = self;
             format = "pyproject";
             disabled = pythonOlder "3.6";
