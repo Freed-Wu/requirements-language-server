@@ -3,7 +3,7 @@
 ## [AUR](https://aur.archlinux.org/packages/portage-language-server)
 
 ```sh
-yay -S python-portage-language-server
+yay -S portage-language-server
 ```
 
 ## [NUR](https://nur.nix-community.org/repos/Freed-Wu)
