@@ -1,6 +1,6 @@
 # Install
 
-## [AUR](https://aur.archlinux.org/packages/requirements-language-server)
+## [AUR](https://aur.archlinux.org/packages/python-requirements-language-server)
 
 ```sh
 yay -S python-requirements-language-server
