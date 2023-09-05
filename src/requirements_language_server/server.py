@@ -6,6 +6,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any, Tuple
+from urllib.parse import unquote, urlparse
 
 from lsprotocol.types import (
     INITIALIZE,
@@ -40,6 +41,7 @@ from platformdirs import user_cache_dir
 from pygls.server import LanguageServer
 
 from . import CACHE, NOT_FOUND, TEMPLATE, WHITELIST
+from .diagnostics import diagnostic as tree_sitter_diagnostic
 
 OPTIONS = dict(
     filter(
@@ -250,6 +252,22 @@ class RequirementsLanguageServer(LanguageServer):
                     source="pip-compile",
                 )
                 for line, msg in diagnostic(params.text_document.uri).items()
+            ]
+            diagnostics += [
+                Diagnostic(
+                    range=Range(
+                        Position(node.start_point[0], node.start_point[1]),
+                        Position(node.end_point[0], node.end_point[1]),
+                    ),
+                    message=message,
+                    severity=getattr(DiagnosticSeverity, severity),
+                    source="requirements-language-server",
+                )
+                for node, message, severity in tree_sitter_diagnostic(
+                    os.path.dirname(
+                        unquote(urlparse(params.text_document.uri).path)
+                    )
+                )
             ]
             self.publish_diagnostics(text_doc.uri, diagnostics)
 
