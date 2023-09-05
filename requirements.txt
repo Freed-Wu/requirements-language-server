@@ -5,3 +5,4 @@ pip-cache
 pip-tools
 platformdirs
 pygls
+tree-sitter-requirements

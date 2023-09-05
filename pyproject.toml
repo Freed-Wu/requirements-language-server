@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [project]
 name = "requirements-language-server"
-description = "requirements language server"
+description = "requirements.txt language server"
 readme = "README.md"
 requires-python = ">= 3.7"
 keywords = ["requirements", "language server"]
