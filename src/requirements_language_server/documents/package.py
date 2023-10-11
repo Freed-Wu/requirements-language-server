@@ -7,7 +7,7 @@ from jinja2 import Template
 from pip._internal.commands.show import search_packages_info
 from pip._internal.metadata import get_environment
 
-from . import CACHE, NOT_FOUND, TEMPLATE
+from .. import CACHE, NOT_FOUND, TEMPLATE
 
 
 def search_document(pkgname: str, template: str) -> str:

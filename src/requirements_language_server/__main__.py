@@ -40,6 +40,17 @@ def get_parser() -> ArgumentParser:
         action="store_true",
         help="generate cache",
     )
+    parser.add_argument(
+        "--check",
+        nargs="*",
+        help="check file's errors and warnings",
+    )
+    parser.add_argument(
+        "--color",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="when to display color",
+    )
     return parser
 
 
@@ -47,6 +58,10 @@ def main() -> None:
     r"""Parse arguments and provide shell completions."""
     parser = get_parser()
     args = parser.parse_args()
+    if args.check:
+        from .utils import check
+
+        exit(check(args.check, args.color))
     if args.print_config:
         print(
             CONFIG.get(
@@ -56,7 +71,7 @@ def main() -> None:
         )
         return None
     if args.generate_cache:
-        from .api import generate_cache
+        from .documents.package import generate_cache
 
         generate_cache()
         return None

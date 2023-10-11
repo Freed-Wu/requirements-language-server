@@ -1,0 +1,8 @@
+---
+- id: requirements-language-server-check
+  name: requirements language server check
+  description: >
+    Check requirements.txt
+  language: python
+  files: requirements.*\.txt$
+  entry: requirements-language-server --check
