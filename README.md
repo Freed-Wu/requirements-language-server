@@ -40,12 +40,39 @@
 Language server for
 [requirements.txt](https://pip.pypa.io/en/stable/reference/requirements-file-format).
 
-- [x] document hover: requires [pip](https://github.com/pypa/pip).
-- [x] completion: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
-  Must `pip-cache update` before.
-- [x] diagnostic: requires [pip-compile](https://github.com/jazzband/pip-tools).
+Currently python has two requirement formats:
+
+- [PEP508](https://peps.python.org/pep-0508): supported by:
+  - [setuptools](https://setuptools.pypa.io)
+- [pip](https://pip.pypa.io/en/stable/reference/requirements-file-format/#requirements-file-format):
+  supported by:
+  - [pip](https://pip.pypa.io)
+  - [pip-compile](https://github.com/jazzband/pip-tools)
+
+The difference is that
+[PEP508 doesn't support pip's options](https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata).
+
+- [x] diagnostic
+- [x] format: sort packages
+- [x] go to definition: jump to first repeated package
+- [x] go to reference: jump to all other repeated packages
+- [x] document link: open package's pypi homepage
+- [x] document hover & completion:
+  - [x] pip's options
+  - [x] package: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
+    Must `pip-cache update` before.
+
+Other features:
+
+- [x] pre-commit-hooks
+  - [x] linter
+  - [ ] formatter
 
 ## Screenshots
+
+### Diagnostic
+
+![diagnostic](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/13aa466d-62af-423a-a141-880b495750a7)
 
 ### Document Hover
 
@@ -61,10 +88,6 @@ Language server for
 
 ![file](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/da7e162d-fa82-461a-a8b4-09db684e766c)
 
-### Diagnostic
-
-![module](https://user-images.githubusercontent.com/32936898/194537147-bf4b4528-2594-46df-b05c-56c38c419920.png)
-
 Read
 [![readthedocs](https://shields.io/readthedocs/requirements-language-server)](https://requirements-language-server.readthedocs.io)
 to know more.
@@ -75,3 +98,5 @@ to know more.
   syntax highlight for vim
 - [vim-polyglot](https://github.com/sheerun/vim-polyglot): contains above
 - [bat](https://github.com/sharkdp/bat): syntax highlight for less
+- [requirements-txt-fixer](https://github.com/pre-commit/pre-commit-hooks#requirements-txt-fixer):
+  sort package names

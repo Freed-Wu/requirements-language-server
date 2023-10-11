@@ -1,8 +1,17 @@
 #!/usr/bin/env pip-compile
 
+--requirement=non_existent.txt
+
+# illegal option
+-a
+
+# correct option and existent file
+-r../requirements.txt
+
+# wrong package, correct name should be autopep8
 autopep7
-docutils
 wheel
-pip-tools
-pytest-pep8
-pytest-pythonpath
+# unsorted package
+docutils
+# repeated package
+wheel

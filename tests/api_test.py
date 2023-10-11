@@ -1,6 +1,6 @@
 r"""Test api"""
 from requirements_language_server import NOT_FOUND
-from requirements_language_server.api import search_document
+from requirements_language_server.documents.package import search_document
 
 
 class Test:

@@ -1,8 +1,8 @@
 #!/usr/bin/env -S pip install -r
 
+colorama
 jinja2
 pip-cache
-pip-tools
 platformdirs
 pygls
 tree-sitter-requirements
