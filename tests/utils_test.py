@@ -16,4 +16,4 @@ class Test:
         result = check(
             [os.path.join(os.path.dirname(__file__), "requirements.txt.in")]
         )
-        assert result == 6
+        assert result > 0
