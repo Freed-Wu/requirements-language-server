@@ -6,3 +6,10 @@
   language: python
   files: requirements.*\.txt$
   entry: requirements-language-server --check
+- id: requirements-language-server-format
+  name: requirements language server format
+  description: >
+    Format requirements.txt
+  language: python
+  files: requirements.*\.txt$
+  entry: requirements-language-server --format

@@ -66,7 +66,7 @@ Other features:
 
 - [x] pre-commit-hooks
   - [x] linter
-  - [ ] formatter
+  - [x] formatter
 
 ## Screenshots
 
