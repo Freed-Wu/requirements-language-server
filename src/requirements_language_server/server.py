@@ -137,12 +137,14 @@ class RequirementsLanguageServer(LanguageServer):
         @self.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
         def document_link(params: DocumentLinkParams) -> list[DocumentLink]:
             document = self.workspace.get_document(params.text_document.uri)
+            finder = InvalidPackageFinder()
             return [
                 DocumentLink(
                     node2range(node),
                     f"https://pypi.org/project/{node.text.decode()}",
                 )
                 for node in TypeFinder("package").find_all(self.tree)
+                if finder(node) is False
             ]
 
         @self.feature(TEXT_DOCUMENT_HOVER)

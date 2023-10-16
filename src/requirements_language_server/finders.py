@@ -1,7 +1,5 @@
-from importlib.util import find_spec
-
-from pip_cache import get_package_names
 from lsprotocol.types import DiagnosticSeverity
+from pip_cache import get_package_names
 from tree_sitter import Node
 
 from . import __name__ as NAME
@@ -18,17 +16,15 @@ class InvalidPackageFinder(TypeFinder):
         self,
         source: str = NAME,
         message: str = "{{node.text.decode()}}: no such package",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        super().__init__("package", source, message, serverity)
+        super().__init__("package", source, message, severity)
 
     def __call__(self, node: Node) -> bool:
         text = node.text.decode()
-        return (
-            TypeFinder.__call__(self, node)
-            and text not in get_package_names(text)
-            and find_spec(node.text.decode()) is None
-        )
+        return TypeFinder.__call__(
+            self, node
+        ) and text not in get_package_names(text)
 
 
 class InvalidPathFinder(TypeFinder, NonExistFinder):
@@ -37,10 +33,10 @@ class InvalidPathFinder(TypeFinder, NonExistFinder):
         uri: str,
         source: str = NAME,
         message: str = "{{node.text.decode()}}: no such file",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        TypeFinder.__init__(self, "path", source, message, serverity)
-        NonExistFinder.__init__(self, uri, source, message, serverity)
+        TypeFinder.__init__(self, "path", source, message, severity)
+        NonExistFinder.__init__(self, uri, source, message, severity)
 
     def __call__(self, node: Node) -> bool:
         return TypeFinder.__call__(self, node) and NonExistFinder.__call__(
@@ -54,9 +50,9 @@ class RepeatedPackageFinder(RepeatedFinder):
         uri: str,
         source: str = NAME,
         message: str = "{{node.text.decode()}} is repeated in {{_node.start_point[0] + 1}}:{{_node.start_point[1] + 1}}-{{_node.end_point[0] + 1}}:{{_node.end_point[1]}}",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Warning,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
-        super().__init__(uri, source, message, serverity)
+        super().__init__(uri, source, message, severity)
 
     def filter(self, node: Node) -> bool:
         return node.type == "package"
@@ -68,9 +64,9 @@ class UnsortedRequirementFinder(UnsortedFinder):
         uri: str,
         source: str = NAME,
         message: str = "{{node.text.decode()}} is unsorted due to {{_node.text.decode()}}@{{_node.start_point[0] + 1}}:{{_node.start_point[1] + 1}}-{{_node.end_point[0] + 1}}:{{_node.end_point[1]}}",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Warning,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
-        super().__init__(uri, source, message, serverity)
+        super().__init__(uri, source, message, severity)
 
     def filter(self, node: Node) -> bool:
         return node.type == "requirement"

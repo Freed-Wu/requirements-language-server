@@ -11,11 +11,11 @@ class Finder:
         self,
         source: str = "",
         message: str = "",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         self.source = source
         self.message = message
-        self.severity = serverity
+        self.severity = severity
 
     def __call__(self, node: Node) -> bool:
         return True
