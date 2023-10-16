@@ -67,7 +67,7 @@ class RequirementsLanguageServer(LanguageServer):
         super().__init__(*args)
         self.template = ""
         self.documents = {}
-        self.tree = requirements.parse("")
+        self.trees = {}
 
         @self.feature(INITIALIZE)
         def initialize(params: InitializeParams) -> None:
@@ -91,7 +91,7 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: None
             """
             document = self.workspace.get_document(params.text_document.uri)
-            self.tree = requirements.parse(document.source)
+            self.trees[document.uri] = requirements.parse(document.source)
             diagnostics = get_diagnostics(
                 [
                     UnsortedRequirementFinder(document.uri),
@@ -101,7 +101,7 @@ class RequirementsLanguageServer(LanguageServer):
                     InvalidPackageFinder(),
                     InvalidPathFinder(document.uri),
                 ],
-                self.tree,
+                self.trees[document.uri],
             )
             self.publish_diagnostics(params.text_document.uri, diagnostics)
 
@@ -109,27 +109,33 @@ class RequirementsLanguageServer(LanguageServer):
         def format(params: DocumentFormattingParams) -> list[TextEdit]:
             document = self.workspace.get_document(params.text_document.uri)
             finder = UnsortedRequirementFinder(document.uri)
-            finder.find_all(self.tree)
+            finder.find_all(self.trees[document.uri])
             return finder.get_text_edits()
 
         @self.feature(TEXT_DOCUMENT_DEFINITION)
         def definition(params: TextDocumentPositionParams) -> list[Location]:
-            node = PositionFinder(params.position).find(self.tree)
+            document = self.workspace.get_document(params.text_document.uri)
+            node = PositionFinder(params.position).find(
+                self.trees[document.uri]
+            )
             if node is None:
                 return []
             document = self.workspace.get_document(params.text_document.uri)
             finder = RepeatedPackageFinder(document.uri)
-            finder.find_all(self.tree)
+            finder.find_all(self.trees[document.uri])
             return finder.get_definitions(node)
 
         @self.feature(TEXT_DOCUMENT_REFERENCES)
         def references(params: TextDocumentPositionParams) -> list[Location]:
-            node = PositionFinder(params.position).find(self.tree)
+            document = self.workspace.get_document(params.text_document.uri)
+            node = PositionFinder(params.position).find(
+                self.trees[document.uri]
+            )
             if node is None:
                 return []
             document = self.workspace.get_document(params.text_document.uri)
             finder = RepeatedPackageFinder(document.uri)
-            finder.find_all(self.tree)
+            finder.find_all(self.trees[document.uri])
             return finder.get_references(node)
 
         @self.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
@@ -141,7 +147,9 @@ class RequirementsLanguageServer(LanguageServer):
                     node2range(node),
                     f"https://pypi.org/project/{node.text.decode()}",
                 )
-                for node in TypeFinder("package").find_all(self.tree)
+                for node in TypeFinder("package").find_all(
+                    self.trees[document.uri]
+                )
                 if finder(node) is False
             ]
 
@@ -153,7 +161,10 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: TextDocumentPositionParams
             :rtype: Hover | None
             """
-            node = PositionFinder(params.position).find(self.tree)
+            document = self.workspace.get_document(params.text_document.uri)
+            node = PositionFinder(params.position).find(
+                self.trees[document.uri]
+            )
             if node is None:
                 return None
             text = node.text.decode()
@@ -186,7 +197,10 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: CompletionParams
             :rtype: CompletionList
             """
-            node = PositionFinder(params.position).find(self.tree)
+            document = self.workspace.get_document(params.text_document.uri)
+            node = PositionFinder(params.position).find(
+                self.trees[document.uri]
+            )
             if node is None:
                 return CompletionList(False, [])
             text = node.text.decode()
