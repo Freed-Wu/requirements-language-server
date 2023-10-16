@@ -27,8 +27,6 @@ from lsprotocol.types import (
     Location,
     MarkupContent,
     MarkupKind,
-    Position,
-    Range,
     TextDocumentPositionParams,
     TextEdit,
 )

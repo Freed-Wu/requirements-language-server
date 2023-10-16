@@ -43,7 +43,14 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--check",
         nargs="*",
+        default=[],
         help="check file's errors and warnings",
+    )
+    parser.add_argument(
+        "--format",
+        nargs="*",
+        default=[],
+        help="format files",
     )
     parser.add_argument(
         "--color",
@@ -58,10 +65,12 @@ def main() -> None:
     r"""Parse arguments and provide shell completions."""
     parser = get_parser()
     args = parser.parse_args()
-    if args.check:
-        from .utils import check
+    from .utils import check, format
 
-        exit(check(args.check, args.color))
+    format(args.format)
+    result = check(args.check, args.color)
+    if args.format or args.check:
+        exit(result)
     if args.print_config:
         print(
             CONFIG.get(

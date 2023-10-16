@@ -17,6 +17,7 @@ from .tree_sitter_lsp.diagnose import (
     get_diagnostics,
 )
 from .tree_sitter_lsp.finders import ErrorFinder, MissingFinder
+from .tree_sitter_lsp.format import apply_text_edits
 
 
 def check(
@@ -49,3 +50,16 @@ def check(
         lines += diagnostics2linter_messages(path, diagnostics, color)
     print("\n".join(lines))
     return count
+
+
+def format(paths: list[str]) -> None:
+    for path in paths:
+        finder = UnsortedRequirementFinder(path)
+        with open(path, "r") as f:
+            src = f.read()
+        tree = requirements.parse(src)
+        finder.find_all(tree)
+        text_edits = finder.get_text_edits()
+        src = apply_text_edits(text_edits, src)
+        with open(path, "w") as f:
+            f.write(src)
