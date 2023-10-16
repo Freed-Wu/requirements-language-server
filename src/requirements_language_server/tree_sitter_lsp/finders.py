@@ -4,8 +4,8 @@ from lsprotocol.types import (
     DiagnosticSeverity,
     Location,
     Position,
-    TextEdit,
     Range,
+    TextEdit,
 )
 from tree_sitter import Node
 
@@ -17,9 +17,9 @@ class MissingFinder(Finder):
         self,
         source: str = "",
         message: str = "missing",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        super().__init__(source, message, serverity)
+        super().__init__(source, message, severity)
 
     def __call__(self, node: Node) -> bool:
         return node.child_count == 0 and node.is_missing
@@ -30,9 +30,9 @@ class ErrorFinder(Finder):
         self,
         source: str = "",
         message: str = "syntax error",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        super().__init__(source, message, serverity)
+        super().__init__(source, message, severity)
 
     def __call__(self, node: Node) -> bool:
         return node.child_count == 0 and node.has_error
@@ -44,9 +44,9 @@ class TypeFinder(Finder):
         _type: str,
         source: str = "",
         message: str = "{{node.text.decode()}} belongs {{node.type}}",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Information,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Information,
     ) -> None:
-        super().__init__(source, message, serverity)
+        super().__init__(source, message, severity)
         self.type = _type
 
     def __call__(self, node: Node) -> bool:
@@ -59,9 +59,9 @@ class NonExistFinder(Finder):
         uri: str,
         source: str = "",
         message: str = "{{node.text.decode()}}: no such file",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        super().__init__(source, message, serverity)
+        super().__init__(source, message, severity)
         self.path = self.uri2path(uri)
 
     def get_path(self, path) -> str:
@@ -77,9 +77,9 @@ class RepeatedFinder(Finder):
         uri: str,
         source: str = "",
         message: str = "{{node.text.decode()}} is repeated in {{_node.start_point[0] + 1}}:{{_node.start_point[1] + 1}}-{{_node.end_point[0] + 1}}:{{_node.end_point[1]}}",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Warning,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
-        super().__init__(source, message, serverity)
+        super().__init__(source, message, severity)
         self.uri = uri
         self.nodes = []
         self.node_pairs = []
@@ -140,9 +140,9 @@ class UnsortedFinder(RepeatedFinder):
         uri: str,
         source: str = "",
         message: str = "{{node.text.decode()}} is unsorted due to {{_node.text.decode()}}@{{_node.start_point[0] + 1}}:{{_node.start_point[1] + 1}}-{{_node.end_point[0] + 1}}:{{_node.end_point[1]}}",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Warning,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
-        super().__init__(uri, source, message, serverity)
+        super().__init__(uri, source, message, severity)
 
     def compare(self, node: Node, _node: Node) -> bool:
         return node.text < _node.text
@@ -154,9 +154,9 @@ class PositionFinder(Finder):
         position: Position,
         source: str = "",
         message: str = "",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Information,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Information,
     ) -> None:
-        super().__init__(source, message, serverity)
+        super().__init__(source, message, severity)
         self.position = position
 
     @staticmethod
@@ -177,9 +177,9 @@ class RangeFinder(Finder):
         range: Range,
         source: str = "",
         message: str = "",
-        serverity: DiagnosticSeverity = DiagnosticSeverity.Information,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Information,
     ) -> None:
-        super().__init__(source, message, serverity)
+        super().__init__(source, message, severity)
         self.range = range
 
     @staticmethod
