@@ -55,6 +55,6 @@ def diagnostics2linter_messages(
     if colors is None:
         colors = [Fore.RESET, Fore.RED, Fore.YELLOW, Fore.BLUE, Fore.GREEN]
     return [
-        f"{Fore.MAGENTA}{path}{Fore.RESET}:{Fore.CYAN}{diagnostic.range.start.line + 1}:{diagnostic.range.start.character + 1}{Fore.RESET}-{Fore.CYAN}{diagnostic.range.end.line + 1}:{diagnostic.range.end.character}{Fore.RESET}:{colors[diagnostic.severity if diagnostic.severity else 0]}{str(diagnostic.severity).split('.')[-1].lower()}{Fore.RESET}: {diagnostic.message}"
+        f"{Fore.MAGENTA}{path}{Fore.RESET}:{Fore.CYAN}{diagnostic.range.start.line + 1}:{diagnostic.range.start.character + 1}{Fore.RESET}-{Fore.CYAN}{diagnostic.range.end.line + 1}:{diagnostic.range.end.character + 1}{Fore.RESET}:{colors[diagnostic.severity if diagnostic.severity else 0]}{str(diagnostic.severity).split('.')[-1].lower()}{Fore.RESET}: {diagnostic.message}"
         for diagnostic in diagnostics
     ]

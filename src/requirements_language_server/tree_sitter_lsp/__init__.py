@@ -81,7 +81,7 @@ class Finder:
             Diagnostic(
                 range=Range(
                     Position(node.start_point[0], node.start_point[1]),
-                    Position(node.end_point[0], node.end_point[1]),
+                    Position(node.end_point[0], node.end_point[1] - 1),
                 ),
                 source=self.source,
                 message=Template(self.message).render(
