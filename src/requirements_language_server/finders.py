@@ -10,7 +10,7 @@ from pip_cache import get_package_names
 from tree_sitter import Node, Tree
 
 from .tree_sitter_lsp import UNI, Finder
-from .tree_sitter_lsp.finders import RepeatedFinder, UnsortedFinder
+from .tree_sitter_lsp.finders import RepeatedFinder, TypeFinder, UnsortedFinder
 
 
 class InvalidPackageFinder(Finder):
@@ -118,6 +118,25 @@ class InvalidPathFinder(Finder):
             self.severity,
             _type=self.get_option_type(self.get_option(uni)),
         )
+
+
+class OptionFinder(TypeFinder):
+    r"""Optionfinder."""
+
+    def __init__(
+        self,
+        message: str = "setuptools only supports PEP508",
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    ) -> None:
+        r"""Init.
+
+        :param message:
+        :type message: str
+        :param severity:
+        :type severity: DiagnosticSeverity
+        :rtype: None
+        """
+        super().__init__("option", message, severity)
 
 
 class RepeatedPackageFinder(RepeatedFinder):

@@ -40,7 +40,7 @@
 Language server for
 [requirements.txt](https://pip.pypa.io/en/stable/reference/requirements-file-format).
 
-Currently python has two requirement formats:
+Currently python's `requirement.txt` has 2 types:
 
 - [PEP508](https://peps.python.org/pep-0508): supported by:
   - [setuptools](https://setuptools.pypa.io)
@@ -51,6 +51,22 @@ Currently python has two requirement formats:
 
 The difference is that
 [PEP508 doesn't support pip's options](https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata).
+
+For `pyproject.toml`:
+
+```toml
+[tool.setuptools.dynamic.dependencies]
+file = "requirements.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.dev]
+file = "requirements/dev.txt"
+```
+
+We recognize `requirements.txt` and `requirements/dev.txt` as PEP508's
+`requirements.txt`s and display errors for all pip's options. For other
+`requirements.txt`s, we recognize them as pip's `requirements.txt`s.
+
+Features:
 
 - [x] diagnostic
 - [x] format: sort packages

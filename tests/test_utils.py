@@ -1,4 +1,4 @@
-r"""Test utils"""
+r"""Test utils."""
 import os
 
 from tree_sitter_requirements import parse

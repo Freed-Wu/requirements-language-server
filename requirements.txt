@@ -5,4 +5,5 @@ jinja2
 pip-cache
 platformdirs
 pygls
+tomli; python_version < "3.11"
 tree-sitter-requirements
