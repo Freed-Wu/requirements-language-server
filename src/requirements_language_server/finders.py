@@ -1,8 +1,10 @@
 r"""Finders
 ===========
 """
+import tree_sitter_requirements as requirements
 from lsprotocol.types import DiagnosticSeverity
 from pip_cache import get_package_names
+from tree_sitter import Node, Tree
 
 from .tree_sitter_lsp import UNI, Finder
 from .tree_sitter_lsp.finders import (
@@ -88,6 +90,24 @@ class RepeatedPackageFinder(RepeatedFinder):
         :rtype: None
         """
         super().__init__(message, severity)
+
+    def is_include_node(self, node: Node) -> bool:
+        r"""Is include node.
+
+        :param node:
+        :type node: Node
+        :rtype: bool
+        """
+        return node.type == "path"
+
+    def parse(self, code: bytes) -> Tree:
+        r"""Parse.
+
+        :param code:
+        :type code: bytes
+        :rtype: Tree
+        """
+        return requirements.parse(code)
 
     def filter(self, uni: UNI) -> bool:
         r"""Filter.
