@@ -1,3 +1,6 @@
+r"""Complete
+============
+"""
 import os
 from glob import glob
 from pathlib import Path
@@ -10,6 +13,16 @@ from . import UNI
 def get_completion_list_by_uri(
     uri: str, text: str = "", expr: str = "*"
 ) -> CompletionList:
+    r"""Get completion list by uri.
+
+    :param uri:
+    :type uri: str
+    :param text:
+    :type text: str
+    :param expr:
+    :type expr: str
+    :rtype: CompletionList
+    """
     dirname = os.path.dirname(UNI.uri2path(uri))
     return CompletionList(
         False,

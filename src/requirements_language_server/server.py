@@ -94,6 +94,12 @@ class RequirementsLanguageServer(LanguageServer):
 
         @self.feature(TEXT_DOCUMENT_FORMATTING)
         def format(params: DocumentFormattingParams) -> list[TextEdit]:
+            r"""Format.
+
+            :param params:
+            :type params: DocumentFormattingParams
+            :rtype: list[TextEdit]
+            """
             document = self.workspace.get_document(params.text_document.uri)
             finder = UnsortedRequirementFinder()
             finder.find_all(document.uri, self.trees[document.uri])
@@ -101,6 +107,12 @@ class RequirementsLanguageServer(LanguageServer):
 
         @self.feature(TEXT_DOCUMENT_DEFINITION)
         def definition(params: TextDocumentPositionParams) -> list[Location]:
+            r"""Get definition.
+
+            :param params:
+            :type params: TextDocumentPositionParams
+            :rtype: list[Location]
+            """
             document = self.workspace.get_document(params.text_document.uri)
             uni = PositionFinder(params.position).find(
                 document.uri, self.trees[document.uri]
@@ -113,6 +125,12 @@ class RequirementsLanguageServer(LanguageServer):
 
         @self.feature(TEXT_DOCUMENT_REFERENCES)
         def references(params: TextDocumentPositionParams) -> list[Location]:
+            r"""Get references.
+
+            :param params:
+            :type params: TextDocumentPositionParams
+            :rtype: list[Location]
+            """
             document = self.workspace.get_document(params.text_document.uri)
             uni = PositionFinder(params.position).find(
                 document.uri, self.trees[document.uri]
@@ -125,6 +143,12 @@ class RequirementsLanguageServer(LanguageServer):
 
         @self.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
         def document_link(params: DocumentLinkParams) -> list[DocumentLink]:
+            r"""Get document links.
+
+            :param params:
+            :type params: DocumentLinkParams
+            :rtype: list[DocumentLink]
+            """
             document = self.workspace.get_document(params.text_document.uri)
             finder = InvalidPackageFinder()
             return [

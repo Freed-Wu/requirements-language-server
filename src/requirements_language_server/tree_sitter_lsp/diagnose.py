@@ -1,3 +1,6 @@
+r"""Diagnose
+============
+"""
 import sys
 from typing import Literal
 
@@ -10,6 +13,16 @@ from . import Finder
 def get_diagnostics(
     finders: list[Finder], uri: str, tree: Tree
 ) -> list[Diagnostic]:
+    r"""Get diagnostics.
+
+    :param finders:
+    :type finders: list[Finder]
+    :param uri:
+    :type uri: str
+    :param tree:
+    :type tree: Tree
+    :rtype: list[Diagnostic]
+    """
     return [
         diagnostic
         for finder in finders
@@ -21,6 +34,14 @@ def count_level(
     diagnostics: list[Diagnostic],
     level: DiagnosticSeverity = DiagnosticSeverity.Warning,
 ) -> int:
+    r"""Count level.
+
+    :param diagnostics:
+    :type diagnostics: list[Diagnostic]
+    :param level:
+    :type level: DiagnosticSeverity
+    :rtype: int
+    """
     return len(
         [
             diagnostic
@@ -49,6 +70,18 @@ def diagnostics2linter_messages(
     color: Literal["auto", "always", "never"] = "auto",
     colors: list[str] | None = None,
 ) -> list[str]:
+    r"""Diagnostics2linter messages.
+
+    :param path:
+    :type path: str
+    :param diagnostics:
+    :type diagnostics: list[Diagnostic]
+    :param color:
+    :type color: Literal["auto", "always", "never"]
+    :param colors:
+    :type colors: list[str] | None
+    :rtype: list[str]
+    """
     from colorama import Fore, init
 
     init()
