@@ -379,3 +379,11 @@ class Finder:
         :rtype: list[Diagnostic]
         """
         return [self.uni2diagnostic(uni) for uni in unis]
+
+    def get_text_edits(self) -> list[TextEdit]:
+        r"""Get text edits.
+
+        :param self:
+        :rtype: list[TextEdit]
+        """
+        raise NotImplementedError

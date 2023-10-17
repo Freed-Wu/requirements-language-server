@@ -65,10 +65,15 @@ def main() -> None:
     r"""Parse arguments and provide shell completions."""
     parser = get_parser()
     args = parser.parse_args()
-    from .utils import check, format
 
-    format(args.format)
-    result = check(args.check, args.color)
+    from tree_sitter_requirements import parse
+
+    from .tree_sitter_lsp.diagnose import check
+    from .tree_sitter_lsp.format import format
+    from .utils import DIAGNOSTICS_FINDERS, FORMATTING_FINDER
+
+    format(args.format, FORMATTING_FINDER, parse)
+    result = check(args.check, DIAGNOSTICS_FINDERS, parse, args.color)
     if args.format or args.check:
         exit(result)
     if args.print_config:
