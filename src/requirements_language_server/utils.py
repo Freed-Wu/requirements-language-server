@@ -35,6 +35,16 @@ def check(
     color: Literal["auto", "always", "never"] = "auto",
     finders: list[Finder] | None = None,
 ) -> int:
+    r"""Check.
+
+    :param paths:
+    :type paths: list[str]
+    :param color:
+    :type color: Literal["auto", "always", "never"]
+    :param finders:
+    :type finders: list[Finder] | None
+    :rtype: int
+    """
     count = 0
     lines = []
     if finders is None:
@@ -51,6 +61,12 @@ def check(
 
 
 def format(paths: list[str]) -> None:
+    r"""Format.
+
+    :param paths:
+    :type paths: list[str]
+    :rtype: None
+    """
     for path in paths:
         finder = UnsortedRequirementFinder(path)
         with open(path, "r") as f:
