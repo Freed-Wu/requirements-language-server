@@ -36,15 +36,11 @@ from pygls.server import LanguageServer
 from . import NOT_FOUND, TEMPLATE
 from .documents import get_documents
 from .documents.option import OPTIONS, OPTIONS_WITH_EQUAL
-from .finders import (
-    InvalidPackageFinder,
-    RepeatedPackageFinder,
-    UnsortedRequirementFinder,
-)
+from .finders import InvalidPackageFinder, RepeatedPackageFinder
 from .tree_sitter_lsp.complete import get_completion_list_by_uri
 from .tree_sitter_lsp.diagnose import get_diagnostics
 from .tree_sitter_lsp.finders import PositionFinder, TypeFinder
-from .utils import FINDERS
+from .utils import DIAGNOSTICS_FINDERS, FORMATTING_FINDER
 
 
 class RequirementsLanguageServer(LanguageServer):
@@ -86,7 +82,7 @@ class RequirementsLanguageServer(LanguageServer):
             document = self.workspace.get_document(params.text_document.uri)
             self.trees[document.uri] = requirements.parse(document.source)
             diagnostics = get_diagnostics(
-                FINDERS,
+                DIAGNOSTICS_FINDERS,
                 document.uri,
                 self.trees[document.uri],
             )
@@ -101,7 +97,7 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: list[TextEdit]
             """
             document = self.workspace.get_document(params.text_document.uri)
-            finder = UnsortedRequirementFinder()
+            finder = FORMATTING_FINDER
             finder.find_all(document.uri, self.trees[document.uri])
             return finder.get_text_edits()
 

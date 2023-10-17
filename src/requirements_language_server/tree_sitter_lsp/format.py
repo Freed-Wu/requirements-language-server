@@ -1,7 +1,12 @@
 r"""Format
 ==========
 """
+from typing import Callable
+
 from lsprotocol.types import Position, Range, TextEdit
+from tree_sitter import Tree
+
+from . import Finder
 
 
 def position_2d_to_1d(source: str, position: Position) -> int:
@@ -49,3 +54,27 @@ def apply_text_edits(text_edits: list[TextEdit], source: str) -> str:
             source[: region.start] + text_edit.new_text + source[region.stop :]
         )
     return source
+
+
+def format(
+    paths: list[str], parse: Callable[[bytes], Tree], finder: Finder
+) -> None:
+    r"""Format.
+
+    :param paths:
+    :type paths: list[str]
+    :param parse:
+    :type parse: Callable[[bytes], Tree]
+    :param finder:
+    :type finder: Finder
+    :rtype: None
+    """
+    for path in paths:
+        with open(path, "rb") as f:
+            src = f.read()
+        tree = parse(src)
+        finder.find_all(path, tree)
+        text_edits = finder.get_text_edits()
+        src = apply_text_edits(text_edits, src.decode())
+        with open(path, "w") as f:
+            f.write(src)

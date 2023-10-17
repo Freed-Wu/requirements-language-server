@@ -2,7 +2,7 @@ r"""Diagnose
 ============
 """
 import sys
-from typing import Literal
+from typing import Callable, Literal
 
 from lsprotocol.types import Diagnostic, DiagnosticSeverity
 from tree_sitter import Tree
@@ -93,3 +93,34 @@ def diagnostics2linter_messages(
         f"{Fore.MAGENTA}{path}{Fore.RESET}:{Fore.CYAN}{diagnostic.range.start.line + 1}:{diagnostic.range.start.character + 1}{Fore.RESET}-{Fore.CYAN}{diagnostic.range.end.line + 1}:{diagnostic.range.end.character + 1}{Fore.RESET}:{colors[diagnostic.severity if diagnostic.severity else 0]}{str(diagnostic.severity).split('.')[-1].lower()}{Fore.RESET}: {diagnostic.message}"
         for diagnostic in diagnostics
     ]
+
+
+def check(
+    paths: list[str],
+    finders: list[Finder],
+    parse: Callable[[bytes], Tree],
+    color: Literal["auto", "always", "never"] = "auto",
+) -> int:
+    r"""Check.
+
+    :param paths:
+    :type paths: list[str]
+    :param finders:
+    :type finders: list[Finder]
+    :param parse:
+    :type parse: Callable[[bytes], Tree]
+    :param color:
+    :type color: Literal["auto", "always", "never"]
+    :rtype: int
+    """
+    count = 0
+    lines = []
+    for path in paths:
+        with open(path, "rb") as f:
+            src = f.read()
+        tree = parse(src)
+        diagnostics = get_diagnostics(finders, path, tree)
+        count += count_level(diagnostics)
+        lines += diagnostics2linter_messages(path, diagnostics, color)
+    print("\n".join(lines))
+    return count
