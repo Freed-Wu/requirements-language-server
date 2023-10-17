@@ -18,6 +18,9 @@ from lsprotocol.types import (
 )
 from tree_sitter import Node, Tree, TreeCursor
 
+# maximum of recursive search
+LEVEL = 5
+
 
 class UNI:
     r"""Unified node identifier."""
@@ -246,25 +249,28 @@ class Finder:
         """
         raise NotImplementedError
 
-    def uri2tree(self, uri: str) -> Tree:
-        r"""Uri2tree.
+    def uri2tree(self, uri: str) -> Tree | None:
+        r"""Convert URI to tree.
 
         :param uri:
         :type uri: str
-        :rtype: Tree
+        :rtype: Tree | None
         """
-        with open(UNI.uri2path(uri), "b") as f:
+        path = UNI.uri2path(uri)
+        if not os.path.exists(path):
+            return None
+        with open(path, "rb") as f:
             code = f.read()
         return self.parse(code)
 
-    def node2uri(self, node: Node) -> str:
-        r"""Node2uri.
+    def uni2uri(self, uni: UNI) -> str:
+        r"""Convert UNI to URI.
 
-        :param node:
-        :type node: Node
+        :param uni:
+        :type uni: UNI
         :rtype: str
         """
-        return UNI.node2text(node)
+        return uni.join(uni.uri, uni.get_text())
 
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False
@@ -280,15 +286,16 @@ class Finder:
         :rtype: str
         """
         while self(UNI(uri, cursor.node)) is False:
-            if self.is_include_node(cursor.node):
+            if self.is_include_node(cursor.node) and self.level < LEVEL:
                 self.level += 1
                 old_uri = uri
-                uri = self.node2uri(cursor.node)
+                uri = self.uni2uri(UNI(uri, cursor.node))
                 tree = self.uri2tree(uri)
-                if is_all:
-                    self.find_all(uri, tree)
-                else:
-                    self.find(uri, tree)
+                if tree is not None:
+                    if is_all:
+                        self.find_all(uri, tree)
+                    else:
+                        self.find(uri, tree)
                 uri = old_uri
                 self.level -= 1
             if cursor.node.child_count > 0:
@@ -321,6 +328,8 @@ class Finder:
         self.reset()
         if tree is None:
             tree = self.uri2tree(uri)
+        if tree is None:
+            return None
         cursor = tree.walk()
         if uri := self.move_cursor(uri, cursor, False):
             return UNI(uri, cursor.node)
@@ -339,6 +348,8 @@ class Finder:
         self.reset()
         if tree is None:
             tree = self.uri2tree(uri)
+        if tree is None:
+            return []
         cursor = tree.walk()
         unis = []
         while True:

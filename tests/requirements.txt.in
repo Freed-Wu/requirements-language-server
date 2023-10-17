@@ -9,7 +9,7 @@
 -r../requirements.txt
 
 # wrong package, correct name should be autopep8
-autopep7
+autopep7 == 1.0.0
 # repeated package, repeated on ../requirements.txt
 platformdirs
 # unsorted package

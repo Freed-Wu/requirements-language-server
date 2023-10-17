@@ -99,9 +99,7 @@ class NonExistentFinder(Finder):
         :type uni: UNI
         :rtype: bool
         """
-        path = uni.get_path()
-        text = uni.get_text()
-        return not os.path.exists(UNI.join(path, text))
+        return not os.path.exists(UNI.uri2path(self.uni2uri(uni)))
 
     def __call__(self, uni: UNI) -> bool:
         r"""Call.
