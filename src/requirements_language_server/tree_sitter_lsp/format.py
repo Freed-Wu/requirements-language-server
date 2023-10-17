@@ -57,16 +57,16 @@ def apply_text_edits(text_edits: list[TextEdit], source: str) -> str:
 
 
 def format(
-    paths: list[str], parse: Callable[[bytes], Tree], finder: Finder
+    paths: list[str], finder: Finder, parse: Callable[[bytes], Tree]
 ) -> None:
     r"""Format.
 
     :param paths:
     :type paths: list[str]
-    :param parse:
-    :type parse: Callable[[bytes], Tree]
     :param finder:
     :type finder: Finder
+    :param parse:
+    :type parse: Callable[[bytes], Tree]
     :rtype: None
     """
     for path in paths:
