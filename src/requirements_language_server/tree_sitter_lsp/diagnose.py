@@ -7,11 +7,13 @@ from tree_sitter import Tree
 from . import Finder
 
 
-def get_diagnostics(finders: list[Finder], tree: Tree) -> list[Diagnostic]:
+def get_diagnostics(
+    finders: list[Finder], uri: str, tree: Tree
+) -> list[Diagnostic]:
     return [
         diagnostic
         for finder in finders
-        for diagnostic in finder.nodes2diagnostics(finder.find_all(tree))
+        for diagnostic in finder.unis2diagnostics(finder.find_all(uri, tree))
     ]
 
 
