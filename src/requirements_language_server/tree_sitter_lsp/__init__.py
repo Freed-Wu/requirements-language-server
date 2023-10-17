@@ -4,7 +4,6 @@ r"""Tree-sitter LSP
 import os
 from copy import deepcopy
 from typing import Any
-from urllib.parse import unquote, urlparse
 
 from jinja2 import Template
 from lsprotocol.types import (
@@ -16,6 +15,7 @@ from lsprotocol.types import (
     Range,
     TextEdit,
 )
+from pygls.uris import to_fs_path
 from tree_sitter import Node, Tree, TreeCursor
 
 # maximum of recursive search
@@ -109,7 +109,9 @@ class UNI:
         :type uri: str
         :rtype: str
         """
-        return unquote(urlparse(uri).path)
+        if path := to_fs_path(uri):
+            return path
+        raise TypeError
 
     def get_diagnostic(
         self,
