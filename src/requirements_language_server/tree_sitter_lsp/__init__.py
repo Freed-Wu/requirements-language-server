@@ -264,7 +264,7 @@ class Finder:
         :type node: Node
         :rtype: str
         """
-        return node.text.decode()
+        return UNI.node2text(node)
 
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False
