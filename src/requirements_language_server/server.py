@@ -38,20 +38,13 @@ from .documents import get_documents
 from .documents.option import OPTIONS, OPTIONS_WITH_EQUAL
 from .finders import (
     InvalidPackageFinder,
-    InvalidPathFinder,
     RepeatedPackageFinder,
     UnsortedRequirementFinder,
 )
 from .tree_sitter_lsp.complete import get_completion_list_by_uri
 from .tree_sitter_lsp.diagnose import get_diagnostics
-from .tree_sitter_lsp.finders import (
-    ErrorFinder,
-    MissingFinder,
-    PositionFinder,
-    TypeFinder,
-)
-
-node2range = ErrorFinder.node2range
+from .tree_sitter_lsp.finders import PositionFinder, TypeFinder
+from .utils import FINDERS
 
 
 class RequirementsLanguageServer(LanguageServer):
@@ -93,14 +86,8 @@ class RequirementsLanguageServer(LanguageServer):
             document = self.workspace.get_document(params.text_document.uri)
             self.trees[document.uri] = requirements.parse(document.source)
             diagnostics = get_diagnostics(
-                [
-                    UnsortedRequirementFinder(document.uri),
-                    RepeatedPackageFinder(document.uri),
-                    ErrorFinder(),
-                    MissingFinder(),
-                    InvalidPackageFinder(),
-                    InvalidPathFinder(document.uri),
-                ],
+                FINDERS,
+                document.uri,
                 self.trees[document.uri],
             )
             self.publish_diagnostics(params.text_document.uri, diagnostics)
@@ -108,49 +95,46 @@ class RequirementsLanguageServer(LanguageServer):
         @self.feature(TEXT_DOCUMENT_FORMATTING)
         def format(params: DocumentFormattingParams) -> list[TextEdit]:
             document = self.workspace.get_document(params.text_document.uri)
-            finder = UnsortedRequirementFinder(document.uri)
-            finder.find_all(self.trees[document.uri])
+            finder = UnsortedRequirementFinder()
+            finder.find_all(document.uri, self.trees[document.uri])
             return finder.get_text_edits()
 
         @self.feature(TEXT_DOCUMENT_DEFINITION)
         def definition(params: TextDocumentPositionParams) -> list[Location]:
             document = self.workspace.get_document(params.text_document.uri)
-            node = PositionFinder(params.position).find(
-                self.trees[document.uri]
+            uni = PositionFinder(params.position).find(
+                document.uri, self.trees[document.uri]
             )
-            if node is None:
+            if uni is None:
                 return []
-            document = self.workspace.get_document(params.text_document.uri)
-            finder = RepeatedPackageFinder(document.uri)
-            finder.find_all(self.trees[document.uri])
-            return finder.get_definitions(node)
+            finder = RepeatedPackageFinder()
+            finder.find_all(document.uri, self.trees[document.uri])
+            return finder.get_definitions(uni)
 
         @self.feature(TEXT_DOCUMENT_REFERENCES)
         def references(params: TextDocumentPositionParams) -> list[Location]:
             document = self.workspace.get_document(params.text_document.uri)
-            node = PositionFinder(params.position).find(
-                self.trees[document.uri]
+            uni = PositionFinder(params.position).find(
+                document.uri, self.trees[document.uri]
             )
-            if node is None:
+            if uni is None:
                 return []
-            document = self.workspace.get_document(params.text_document.uri)
-            finder = RepeatedPackageFinder(document.uri)
-            finder.find_all(self.trees[document.uri])
-            return finder.get_references(node)
+            finder = RepeatedPackageFinder()
+            finder.find_all(document.uri, self.trees[document.uri])
+            return finder.get_references(uni)
 
         @self.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
         def document_link(params: DocumentLinkParams) -> list[DocumentLink]:
             document = self.workspace.get_document(params.text_document.uri)
             finder = InvalidPackageFinder()
             return [
-                DocumentLink(
-                    node2range(node),
-                    f"https://pypi.org/project/{node.text.decode()}",
+                uni.get_document_link(
+                    "https://pypi.org/project/{{uni.get_text()}}"
                 )
-                for node in TypeFinder("package").find_all(
-                    self.trees[document.uri]
+                for uni in TypeFinder("package").find_all(
+                    document.uri, self.trees[document.uri]
                 )
-                if finder(node) is False
+                if finder(uni) is False
             ]
 
         @self.feature(TEXT_DOCUMENT_HOVER)
@@ -162,20 +146,18 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: Hover | None
             """
             document = self.workspace.get_document(params.text_document.uri)
-            node = PositionFinder(params.position).find(
-                self.trees[document.uri]
+            uni = PositionFinder(params.position).find(
+                document.uri, self.trees[document.uri]
             )
-            if node is None:
+            if uni is None:
                 return None
-            text = node.text.decode()
-            if node.type == "option":
+            text = uni.get_text()
+            if uni.node.type == "option":
                 return Hover(
-                    MarkupContent(
-                        kind=MarkupKind.PlainText, value=OPTIONS.get(text, "")
-                    ),
-                    node2range(node),
+                    MarkupContent(MarkupKind.PlainText, OPTIONS.get(text, "")),
+                    uni.get_range(),
                 )
-            if node.type == "package":
+            if uni.node.type == "package":
                 doc = self.documents.get(text, NOT_FOUND)
                 # if cache is outdated
                 if doc == NOT_FOUND:
@@ -185,8 +167,8 @@ class RequirementsLanguageServer(LanguageServer):
                 if not doc:
                     return None
                 return Hover(
-                    MarkupContent(kind=MarkupKind.Markdown, value=doc),
-                    node2range(node),
+                    MarkupContent(MarkupKind.Markdown, doc),
+                    uni.get_range(),
                 )
 
         @self.feature(TEXT_DOCUMENT_COMPLETION)
@@ -198,14 +180,14 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: CompletionList
             """
             document = self.workspace.get_document(params.text_document.uri)
-            node = PositionFinder(params.position).find(
-                self.trees[document.uri]
+            uni = PositionFinder(params.position).find(
+                document.uri, self.trees[document.uri]
             )
-            if node is None:
+            if uni is None:
                 return CompletionList(False, [])
-            text = node.text.decode()
+            text = uni.get_text()
 
-            if node.type == "package":
+            if uni.node.type == "package":
                 return CompletionList(
                     False,
                     [
@@ -223,7 +205,7 @@ class RequirementsLanguageServer(LanguageServer):
                         for x in get_package_names(text)
                     ],
                 )
-            # node.type != "option" due to incomplete
+            # uni.node.type != "option" due to incomplete
             if text.startswith("-"):
                 return CompletionList(
                     False,

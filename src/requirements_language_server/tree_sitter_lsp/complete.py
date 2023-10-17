@@ -1,19 +1,16 @@
-from glob import glob
 import os
+from glob import glob
 from pathlib import Path
-from . import Finder
 
-from lsprotocol.types import (
-    CompletionList,
-    CompletionItem,
-    CompletionItemKind,
-)
+from lsprotocol.types import CompletionItem, CompletionItemKind, CompletionList
+
+from . import UNI
 
 
 def get_completion_list_by_uri(
     uri: str, text: str = "", expr: str = "*"
 ) -> CompletionList:
-    dirname = os.path.dirname(Finder.uri2path(uri))
+    dirname = os.path.dirname(UNI.uri2path(uri))
     return CompletionList(
         False,
         [

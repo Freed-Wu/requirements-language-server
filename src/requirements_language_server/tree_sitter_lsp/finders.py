@@ -1,6 +1,7 @@
 import os
 
 from lsprotocol.types import (
+    Diagnostic,
     DiagnosticSeverity,
     Location,
     Position,
@@ -9,154 +10,139 @@ from lsprotocol.types import (
 )
 from tree_sitter import Node
 
-from . import Finder
+from . import UNI, Finder
 
 
 class MissingFinder(Finder):
     def __init__(
         self,
-        source: str = "",
-        message: str = "missing",
+        message: str = "{{uni.get_text()}}: missing",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        super().__init__(source, message, severity)
+        super().__init__(message, severity)
 
-    def __call__(self, node: Node) -> bool:
+    def __call__(self, uni: UNI) -> bool:
+        node = uni.node
         return node.child_count == 0 and node.is_missing
 
 
 class ErrorFinder(Finder):
     def __init__(
         self,
-        source: str = "",
-        message: str = "syntax error",
+        message: str = "{{uni.get_text()}}: error",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        super().__init__(source, message, severity)
+        super().__init__(message, severity)
 
-    def __call__(self, node: Node) -> bool:
+    def __call__(self, uni: UNI) -> bool:
+        node = uni.node
         return node.child_count == 0 and node.has_error
 
 
-class TypeFinder(Finder):
+class NonExistentFinder(Finder):
     def __init__(
         self,
-        _type: str,
-        source: str = "",
-        message: str = "{{node.text.decode()}} belongs {{node.type}}",
-        severity: DiagnosticSeverity = DiagnosticSeverity.Information,
-    ) -> None:
-        super().__init__(source, message, severity)
-        self.type = _type
-
-    def __call__(self, node: Node) -> bool:
-        return node.type == self.type
-
-
-class NonExistFinder(Finder):
-    def __init__(
-        self,
-        uri: str,
-        source: str = "",
-        message: str = "{{node.text.decode()}}: no such file",
+        message: str = "{{uni.get_text()}}: no such file or directory",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
-        super().__init__(source, message, severity)
-        self.path = self.uri2path(uri)
+        super().__init__(message, severity)
 
-    def get_path(self, path) -> str:
-        return os.path.join(os.path.dirname(self.path), path)
+    def is_non_existent(self, uni: UNI) -> bool:
+        path = uni.get_path()
+        text = uni.get_text()
+        return not os.path.exists(UNI.join(path, text))
 
-    def __call__(self, node: Node) -> bool:
-        return not os.path.exists(self.get_path(self.get_text(node)))
+    def __call__(self, uni: UNI) -> bool:
+        return self.is_non_existent(uni)
 
 
 class RepeatedFinder(Finder):
     def __init__(
         self,
-        uri: str,
-        source: str = "",
-        message: str = "{{node.text.decode()}} is repeated in {{_node.start_point[0] + 1}}:{{_node.start_point[1] + 1}}-{{_node.end_point[0] + 1}}:{{_node.end_point[1]}}",
+        message: str = "{{uni.get_text()}}: is repeated on {{_uni}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
-        super().__init__(source, message, severity)
-        self.uri = uri
-        self.nodes = []
-        self.node_pairs = []
+        super().__init__(message, severity)
 
-    def reset(self):
-        self.nodes = []
-        self.node_pairs = []
+    def reset(self) -> None:
+        self.unis = []
+        self.uni_pairs = []
 
-    def filter(self, node: Node) -> bool:
+    def filter(self, uni: UNI) -> bool:
         return True
 
-    def compare(self, node: Node, _node: Node) -> bool:
-        return node.text == _node.text
+    def compare(self, uni: UNI, _uni: UNI) -> bool:
+        return uni.node.text == _uni.node.text
 
-    def find_node(self, node: Node) -> Node | None:
-        for _node in self.nodes:
-            if self.compare(node, _node):
-                self.node_pairs += [[node, _node]]
-                return _node
-        if self.filter(node):
-            self.nodes += [node]
-        return None
-
-    def __call__(self, node: Node) -> bool:
-        if self.filter(node) is False:
+    def __call__(self, uni: UNI) -> bool:
+        if self.filter(uni) is False:
             return False
-        return self.find_node(node) is not None
+        for _uni in self.unis:
+            if self.compare(uni, _uni):
+                self.uni_pairs += [[uni, _uni]]
+                return True
+        self.unis += [uni]
+        return False
 
-    def get_definitions(self, node: Node) -> list[Location]:
-        for node_, _node in self.node_pairs:
+    def get_definitions(self, uni: UNI) -> list[Location]:
+        for uni_, _uni in self.uni_pairs:
             # cache hit
-            if node == node_:
-                return [Location(self.uri, self.node2range(_node))]
+            if uni == uni_:
+                return [_uni.get_location()]
         return []
 
-    def get_references(self, node: Node) -> list[Location]:
+    def get_references(self, uni: UNI) -> list[Location]:
         locations = []
-        for node_, _node in self.node_pairs:
+        for uni_, _uni in self.uni_pairs:
             # cache hit
-            if node == _node:
-                locations += [Location(self.uri, self.node2range(node_))]
+            if uni == _uni:
+                locations += [uni_.get_location()]
         return locations
 
     def get_text_edits(self) -> list[TextEdit]:
         edits = []
-        for node, _node in self.node_pairs:
-            # swap 2 nodes
+        for uni, _uni in self.uni_pairs:
+            # swap 2 unis
             edits += [
-                TextEdit(self.node2range(node), _node.text.decode()),
-                TextEdit(self.node2range(_node), node.text.decode()),
+                uni.get_text_edit(_uni.get_text()),
+                _uni.get_text_edit(uni.get_text()),
             ]
         return edits
+
+    def uni2diagnostic(self, uni: UNI) -> Diagnostic:
+        for uni_, _uni in self.uni_pairs:
+            if uni == uni_:
+                return uni.get_diagnostic(
+                    self.message, self.severity, _uni=_uni
+                )
+        return uni.get_diagnostic(self.message, self.severity)
 
 
 class UnsortedFinder(RepeatedFinder):
     def __init__(
         self,
-        uri: str,
-        source: str = "",
-        message: str = "{{node.text.decode()}} is unsorted due to {{_node.text.decode()}}@{{_node.start_point[0] + 1}}:{{_node.start_point[1] + 1}}-{{_node.end_point[0] + 1}}:{{_node.end_point[1]}}",
+        message: str = "{{uni.get_text()}}: is unsorted due to {{_uni}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
-        super().__init__(uri, source, message, severity)
+        super().__init__(message, severity)
 
-    def compare(self, node: Node, _node: Node) -> bool:
-        return node.text < _node.text
+    def compare(self, uni: UNI, _uni: UNI) -> bool:
+        return uni.node.text < _uni.node.text
+
+
+class TypeFinder(Finder):
+    def __init__(self, _type: str) -> None:
+        super().__init__()
+        self.type = _type
+
+    def __call__(self, uni: UNI) -> bool:
+        node = uni.node
+        return node.type == self.type
 
 
 class PositionFinder(Finder):
-    def __init__(
-        self,
-        position: Position,
-        source: str = "",
-        message: str = "",
-        severity: DiagnosticSeverity = DiagnosticSeverity.Information,
-    ) -> None:
-        super().__init__(source, message, severity)
+    def __init__(self, position: Position) -> None:
+        super().__init__()
         self.position = position
 
     @staticmethod
@@ -167,26 +153,22 @@ class PositionFinder(Finder):
             <= Position(*node.end_point)
         )
 
-    def __call__(self, node: Node) -> bool:
+    def __call__(self, uni: UNI) -> bool:
+        node = uni.node
         return node.child_count == 0 and self.belong(self.position, node)
 
 
 class RangeFinder(Finder):
-    def __init__(
-        self,
-        range: Range,
-        source: str = "",
-        message: str = "",
-        severity: DiagnosticSeverity = DiagnosticSeverity.Information,
-    ) -> None:
-        super().__init__(source, message, severity)
-        self.range = range
+    def __init__(self, _range: Range) -> None:
+        super().__init__()
+        self.range = _range
 
     @staticmethod
-    def equal(range: Range, node: Node) -> bool:
-        return range.start == Position(
+    def equal(_range: Range, node: Node) -> bool:
+        return _range.start == Position(
             *node.start_point
-        ) and range.end == Position(*node.end_point)
+        ) and _range.end == Position(*node.end_point)
 
-    def __call__(self, node: Node) -> bool:
+    def __call__(self, uni: UNI) -> bool:
+        node = uni.node
         return self.equal(self.range, node)
