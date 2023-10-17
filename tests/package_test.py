@@ -1,4 +1,4 @@
-r"""Test api"""
+r"""Test package"""
 from requirements_language_server import NOT_FOUND
 from requirements_language_server.documents.package import search_document
 

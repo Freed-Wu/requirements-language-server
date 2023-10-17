@@ -10,8 +10,7 @@
 
 # wrong package, correct name should be autopep8
 autopep7
-wheel
+# repeated package, repeated on ../requirements.txt
+platformdirs
 # unsorted package
 docutils
-# repeated package
-wheel
