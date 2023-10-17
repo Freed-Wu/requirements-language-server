@@ -79,7 +79,7 @@ class NotFileFinder(Finder):
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such file",
+        message: str = "{{uni.get_text()}}: no such file or directory",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -92,15 +92,6 @@ class NotFileFinder(Finder):
         """
         super().__init__(message, severity)
 
-    def is_file(self, uni: UNI) -> bool:
-        r"""Is file.
-
-        :param uni:
-        :type uni: UNI
-        :rtype: bool
-        """
-        return os.path.isfile(UNI.uri2path(self.uni2uri(uni)))
-
     def __call__(self, uni: UNI) -> bool:
         r"""Call.
 
@@ -108,7 +99,8 @@ class NotFileFinder(Finder):
         :type uni: UNI
         :rtype: bool
         """
-        return not self.is_file(uni)
+        path = self.uni2path(uni)
+        return not (os.path.isfile(path) or os.path.isdir(path))
 
 
 class RepeatedFinder(Finder):

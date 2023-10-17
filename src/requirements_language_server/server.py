@@ -46,14 +46,17 @@ from .utils import DIAGNOSTICS_FINDERS, FORMATTING_FINDER
 class RequirementsLanguageServer(LanguageServer):
     r"""Requirements language server."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         r"""Init.
 
+        :param self:
         :param args:
         :type args: Any
+        :param kwargs:
+        :type kwargs: Any
         :rtype: None
         """
-        super().__init__(*args)
+        super().__init__(*args, **kwargs)
         self.template = ""
         self.documents = {}
         self.trees = {}

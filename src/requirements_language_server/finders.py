@@ -1,17 +1,16 @@
 r"""Finders
 ===========
 """
+import os
+from typing import Literal
+
 import tree_sitter_requirements as requirements
-from lsprotocol.types import DiagnosticSeverity
+from lsprotocol.types import Diagnostic, DiagnosticSeverity
 from pip_cache import get_package_names
 from tree_sitter import Node, Tree
 
 from .tree_sitter_lsp import UNI, Finder
-from .tree_sitter_lsp.finders import (
-    NotFileFinder,
-    RepeatedFinder,
-    UnsortedFinder,
-)
+from .tree_sitter_lsp.finders import RepeatedFinder, UnsortedFinder
 
 
 class InvalidPackageFinder(Finder):
@@ -45,12 +44,12 @@ class InvalidPackageFinder(Finder):
         )
 
 
-class InvalidPathFinder(NotFileFinder):
+class InvalidPathFinder(Finder):
     r"""Invalidpathfinder."""
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such file",
+        message: str = "{{uni.get_text()}}: no such {{_type}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -63,6 +62,34 @@ class InvalidPathFinder(NotFileFinder):
         """
         super().__init__(message, severity)
 
+    @staticmethod
+    def get_option(uni: UNI) -> str:
+        r"""Get option.
+
+        :param uni:
+        :type uni: UNI
+        :rtype: str
+        """
+        option = ""
+        if children := getattr(uni.node.parent, "children", None):
+            if len(children) > 0:
+                option = children[0].text.decode()
+        return option
+
+    @staticmethod
+    def get_option_type(option: str) -> Literal["file", "dir", ""]:
+        r"""Get option type.
+
+        :param option:
+        :type option: str
+        :rtype: Literal["file", "dir", ""]
+        """
+        if option in ["-r", "--requirement", "-c", "--constraint"]:
+            return "file"
+        if option in ["-e", "--editable"]:
+            return "dir"
+        return ""
+
     def __call__(self, uni: UNI) -> bool:
         r"""Call.
 
@@ -70,7 +97,27 @@ class InvalidPathFinder(NotFileFinder):
         :type uni: UNI
         :rtype: bool
         """
-        return uni.node.type == "path" and not self.is_file(uni)
+        path = self.uni2path(uni)
+        option = self.get_option(uni)
+        return uni.node.type == "path" and not (
+            os.path.isfile(path)
+            and self.get_option_type(option) == "file"
+            or os.path.isdir(path)
+            and self.get_option_type(option) == "dir"
+        )
+
+    def uni2diagnostic(self, uni: UNI) -> Diagnostic:
+        r"""Uni2diagnostic.
+
+        :param uni:
+        :type uni: UNI
+        :rtype: Diagnostic
+        """
+        return uni.get_diagnostic(
+            self.message,
+            self.severity,
+            _type=self.get_option_type(self.get_option(uni)),
+        )
 
 
 class RepeatedPackageFinder(RepeatedFinder):
@@ -78,6 +125,7 @@ class RepeatedPackageFinder(RepeatedFinder):
 
     def __init__(
         self,
+        pep508: bool = False,
         message: str = "{{uni.get_text()}}: is repeated on {{_uni}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
@@ -90,6 +138,7 @@ class RepeatedPackageFinder(RepeatedFinder):
         :rtype: None
         """
         super().__init__(message, severity)
+        self.pep508 = pep508
 
     def is_include_node(self, node: Node) -> bool:
         r"""Is include node.
@@ -98,7 +147,7 @@ class RepeatedPackageFinder(RepeatedFinder):
         :type node: Node
         :rtype: bool
         """
-        return node.type == "path"
+        return node.type == "path" and not self.pep508
 
     def parse(self, code: bytes) -> Tree:
         r"""Parse.

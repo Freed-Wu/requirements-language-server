@@ -274,6 +274,16 @@ class Finder:
         """
         return uni.join(uni.uri, uni.get_text())
 
+    def uni2path(self, uni: UNI) -> str:
+        r"""Convert UNI to path.
+
+        :param self:
+        :param uni:
+        :type uni: UNI
+        :rtype: str
+        """
+        return self.uni2uri(uni)
+
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False
     ) -> str:
