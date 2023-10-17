@@ -74,12 +74,12 @@ class ErrorFinder(Finder):
         return node.child_count == 0 and node.has_error
 
 
-class NonExistentFinder(Finder):
-    r"""Nonexistentfinder."""
+class NotFileFinder(Finder):
+    r"""NotFilefinder."""
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such file or directory",
+        message: str = "{{uni.get_text()}}: no such file",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -92,14 +92,14 @@ class NonExistentFinder(Finder):
         """
         super().__init__(message, severity)
 
-    def is_non_existent(self, uni: UNI) -> bool:
-        r"""Is non existent.
+    def is_file(self, uni: UNI) -> bool:
+        r"""Is file.
 
         :param uni:
         :type uni: UNI
         :rtype: bool
         """
-        return not os.path.exists(UNI.uri2path(self.uni2uri(uni)))
+        return os.path.isfile(UNI.uri2path(self.uni2uri(uni)))
 
     def __call__(self, uni: UNI) -> bool:
         r"""Call.
@@ -108,7 +108,7 @@ class NonExistentFinder(Finder):
         :type uni: UNI
         :rtype: bool
         """
-        return self.is_non_existent(uni)
+        return not self.is_file(uni)
 
 
 class RepeatedFinder(Finder):

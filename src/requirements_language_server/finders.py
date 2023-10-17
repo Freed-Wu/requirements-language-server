@@ -8,7 +8,7 @@ from tree_sitter import Node, Tree
 
 from .tree_sitter_lsp import UNI, Finder
 from .tree_sitter_lsp.finders import (
-    NonExistentFinder,
+    NotFileFinder,
     RepeatedFinder,
     UnsortedFinder,
 )
@@ -45,12 +45,12 @@ class InvalidPackageFinder(Finder):
         )
 
 
-class InvalidPathFinder(NonExistentFinder):
+class InvalidPathFinder(NotFileFinder):
     r"""Invalidpathfinder."""
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such package",
+        message: str = "{{uni.get_text()}}: no such file",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -70,7 +70,7 @@ class InvalidPathFinder(NonExistentFinder):
         :type uni: UNI
         :rtype: bool
         """
-        return uni.node.type == "path" and self.is_non_existent(uni)
+        return uni.node.type == "path" and not self.is_file(uni)
 
 
 class RepeatedPackageFinder(RepeatedFinder):
