@@ -1,6 +1,8 @@
+# type: ignore
 r"""Server
 ==========
 """
+import os
 from typing import Any
 
 import tree_sitter_requirements as requirements
@@ -37,10 +39,20 @@ from . import NOT_FOUND, TEMPLATE
 from .documents import get_documents
 from .documents.option import OPTIONS, OPTIONS_WITH_EQUAL
 from .finders import InvalidPackageFinder, RepeatedPackageFinder
+from .tree_sitter_lsp import UNI
 from .tree_sitter_lsp.complete import get_completion_list_by_uri
 from .tree_sitter_lsp.diagnose import get_diagnostics
 from .tree_sitter_lsp.finders import PositionFinder, TypeFinder
-from .utils import DIAGNOSTICS_FINDERS, FORMATTING_FINDER
+from .utils import (
+    DIAGNOSTICS_FINDERS,
+    DIAGNOSTICS_FINDERS_PEP508,
+    FORMATTING_FINDER,
+)
+
+try:
+    import tomllib as tomli
+except ImportError:
+    import tomli
 
 
 class RequirementsLanguageServer(LanguageServer):
@@ -84,8 +96,12 @@ class RequirementsLanguageServer(LanguageServer):
             """
             document = self.workspace.get_document(params.text_document.uri)
             self.trees[document.uri] = requirements.parse(document.source)
+            if self.is_pep508(document.uri):
+                finders = DIAGNOSTICS_FINDERS_PEP508
+            else:
+                finders = DIAGNOSTICS_FINDERS
             diagnostics = get_diagnostics(
-                DIAGNOSTICS_FINDERS,
+                finders,
                 document.uri,
                 self.trees[document.uri],
             )
@@ -245,3 +261,49 @@ class RequirementsLanguageServer(LanguageServer):
                 )
             document = self.workspace.get_document(params.text_document.uri)
             return get_completion_list_by_uri(document.uri, text, "*.txt")
+
+    def is_pep508(self, uri: str) -> bool:
+        r"""Is pep508.
+
+        :param uri:
+        :type uri: str
+        :rtype: bool
+        """
+        pyproject_uri = os.path.join(self.workspace.root_uri, "pyproject.toml")
+        document = self.workspace.get_document(pyproject_uri)
+        pyproject_path = UNI.uri2path(document.uri)
+        path = UNI.uri2path(uri)
+        if path in self.get_dependencies_files(pyproject_path):
+            return True
+        return False
+
+    @staticmethod
+    def get_dependencies_files(pyproject_path: str) -> list[str]:
+        r"""Get dependencies files.
+
+        :param pyproject_path:
+        :type pyproject_path: str
+        :rtype: list[str]
+        """
+        if not os.access(pyproject_path, os.R_OK):
+            return []
+        with open(pyproject_path, "rb") as f:
+            data = tomli.load(f)
+        dynamic = data.get("tool", {}).get("setuptools", {}).get("dynamic", {})
+        files = []
+        file = dynamic.get("dependencies", {}).get("file")
+        if file:
+            files += [
+                os.path.abspath(
+                    os.path.realpath(UNI.join(pyproject_path, file))
+                )
+            ]
+        for value in dynamic.get("optional-dependencies", {}).values():
+            file = value.get("file")
+            if file:
+                files += [
+                    os.path.abspath(
+                        os.path.realpath(UNI.join(pyproject_path, file))
+                    )
+                ]
+        return files

@@ -254,14 +254,24 @@ class UnsortedFinder(RepeatedFinder):
 class TypeFinder(Finder):
     r"""Typefinder."""
 
-    def __init__(self, _type: str) -> None:
+    def __init__(
+        self,
+        _type: str,
+        message: str = "",
+        severity: DiagnosticSeverity = DiagnosticSeverity.Information,
+    ) -> None:
         r"""Init.
 
+        :param self:
         :param _type:
         :type _type: str
+        :param message:
+        :type message: str
+        :param severity:
+        :type severity: DiagnosticSeverity
         :rtype: None
         """
-        super().__init__()
+        super().__init__(message, severity)
         self.type = _type
 
     def __call__(self, uni: UNI) -> bool:
