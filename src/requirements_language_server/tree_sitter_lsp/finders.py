@@ -42,7 +42,9 @@ class MissingFinder(Finder):
         :rtype: bool
         """
         node = uni.node
-        return node.child_count == 0 and node.is_missing
+        return node.is_missing and not (
+            any(child.is_missing for child in node.children)
+        )
 
 
 class ErrorFinder(Finder):
@@ -71,7 +73,9 @@ class ErrorFinder(Finder):
         :rtype: bool
         """
         node = uni.node
-        return node.child_count == 0 and node.has_error
+        return node.has_error and not (
+            any(child.has_error for child in node.children)
+        )
 
 
 class NotFileFinder(Finder):
@@ -127,6 +131,7 @@ class RepeatedFinder(Finder):
         :rtype: None
         """
         self.unis = []
+        self._unis = []
         self.uni_pairs = []
 
     def filter(self, uni: UNI) -> bool:
@@ -158,11 +163,11 @@ class RepeatedFinder(Finder):
         """
         if self.filter(uni) is False:
             return False
-        for _uni in self.unis:
+        for _uni in self._unis:
             if self.compare(uni, _uni):
                 self.uni_pairs += [[uni, _uni]]
                 return True
-        self.unis += [uni]
+        self._unis += [uni]
         return False
 
     def get_definitions(self, uni: UNI) -> list[Location]:
@@ -309,9 +314,7 @@ class PositionFinder(Finder):
         :rtype: bool
         """
         return (
-            Position(*node.start_point)
-            <= position
-            <= Position(*node.end_point)
+            Position(*node.start_point) <= position < Position(*node.end_point)
         )
 
     def __call__(self, uni: UNI) -> bool:

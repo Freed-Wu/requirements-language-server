@@ -287,16 +287,17 @@ class Finder:
 
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False
-    ) -> str:
+    ) -> str | None:
         r"""Move cursor.
 
+        :param self:
         :param uri:
         :type uri: str
         :param cursor:
         :type cursor: TreeCursor
         :param is_all:
         :type is_all: bool
-        :rtype: str
+        :rtype: str | None
         """
         while self(UNI(uri, cursor.node)) is False:
             if self.is_include_node(cursor.node) and self.level < LEVEL:
@@ -306,9 +307,11 @@ class Finder:
                 tree = self.uri2tree(uri)
                 if tree is not None:
                     if is_all:
-                        self.find_all(uri, tree)
+                        self.find_all(uri, tree, False)
                     else:
-                        self.find(uri, tree)
+                        result = self.find(uri, tree)
+                        if result is not None:
+                            return
                 uri = old_uri
                 self.level -= 1
             if cursor.node.child_count > 0:
@@ -318,7 +321,7 @@ class Finder:
                 cursor.goto_parent()
                 # when cannot find new nodes, return
                 if cursor.node.parent is None:
-                    return ""
+                    return None
             cursor.goto_next_sibling()
         return uri
 
@@ -327,52 +330,72 @@ class Finder:
 
         :rtype: None
         """
-        pass
+        self.unis = []
 
-    def find(self, uri: str, tree: Tree | None = None) -> UNI | None:
+    def prepare(
+        self, uri: str, tree: Tree | None = None, reset: bool = True
+    ) -> TreeCursor:
+        r"""Prepare.
+
+        :param uri:
+        :type uri: str
+        :param tree:
+        :type tree: Tree | None
+        :param reset:
+        :type reset: bool
+        :rtype: TreeCursor
+        """
+        if reset:
+            self.reset()
+        if tree is None:
+            tree = self.uri2tree(uri)
+        if tree is None:
+            raise TypeError
+        return tree.walk()
+
+    def find(
+        self, uri: str, tree: Tree | None = None, reset: bool = True
+    ) -> UNI | None:
         r"""Find.
 
         :param uri:
         :type uri: str
         :param tree:
         :type tree: Tree | None
+        :param reset:
+        :type reset: bool
         :rtype: UNI | None
         """
-        self.reset()
-        if tree is None:
-            tree = self.uri2tree(uri)
-        if tree is None:
-            return None
-        cursor = tree.walk()
-        if uri := self.move_cursor(uri, cursor, False):
-            return UNI(uri, cursor.node)
+        cursor = self.prepare(uri, tree, reset)
+        _uri = self.move_cursor(uri, cursor, False)
+        if _uri is not None:
+            return UNI(_uri, cursor.node)
         else:
             return None
 
-    def find_all(self, uri: str, tree: Tree | None = None) -> list[UNI]:
+    def find_all(
+        self, uri: str, tree: Tree | None = None, reset: bool = True
+    ) -> list[UNI]:
         r"""Find all.
 
         :param uri:
         :type uri: str
         :param tree:
         :type tree: Tree | None
+        :param reset:
+        :type reset: bool
         :rtype: list[UNI]
         """
-        self.reset()
-        if tree is None:
-            tree = self.uri2tree(uri)
-        if tree is None:
-            return []
-        cursor = tree.walk()
-        unis = []
+        cursor = self.prepare(uri, tree, reset)
         while True:
-            if uri := self.move_cursor(uri, cursor, True):
-                unis += [UNI(uri, cursor.node)]
+            _uri = self.move_cursor(uri, cursor, True)
+            if _uri is not None:
+                self.unis += [UNI(_uri, cursor.node)]
             while cursor.node.next_sibling is None:
                 cursor.goto_parent()
                 # when cannot find new nodes, return
                 if cursor.node.parent is None:
-                    return unis
+                    return self.unis
             cursor.goto_next_sibling()
 
     def uni2diagnostic(self, uni: UNI) -> Diagnostic:
