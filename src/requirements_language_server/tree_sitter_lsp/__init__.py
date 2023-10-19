@@ -282,7 +282,8 @@ class Finder:
         :type uni: UNI
         :rtype: str
         """
-        return self.uni2uri(uni)
+        uri = self.uni2uri(uni)
+        return UNI.uri2path(uri)
 
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False

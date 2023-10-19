@@ -73,7 +73,7 @@ class InvalidPathFinder(Finder):
         option = ""
         if children := getattr(uni.node.parent, "children", None):
             if len(children) > 0:
-                option = children[0].text.decode()
+                option = UNI.node2text(children[0])
         return option
 
     @staticmethod
@@ -150,6 +150,9 @@ class RepeatedPackageFinder(RepeatedFinder):
     ) -> None:
         r"""Init.
 
+        :param self:
+        :param pep508:
+        :type pep508: bool
         :param message:
         :type message: str
         :param severity:
