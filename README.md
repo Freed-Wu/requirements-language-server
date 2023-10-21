@@ -68,19 +68,31 @@ We recognize `requirements.txt` and `requirements/dev.txt` as PEP508's
 
 Features:
 
-- [x] diagnostic
-- [x] format: sort packages
-- [x] go to definition: jump to first repeated package
-- [x] go to reference: jump to all other repeated packages
-- [x] document link: open package's pypi homepage
-- [x] document hover & completion:
+- [x] [Goto Definition](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_definition):
+  jump to first repeated package
+- [x] [Find References](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_references):
+  jump to all other repeated packages
+- [x] [Diagnostic](https://microsoft.github.io/language-server-protocol/specifications/specification-current#diagnostic):
+  - [x] repeated packages
+  - [x] unsorted packages
+  - [x] invalid path
+  - [x] pip's option when PEP508 is enabled
+- [x] [Document Formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_formatting):
+  sort packages
+- [x] [Document Link](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_documentLink):
+  open package's pypi homepage
+- [x] [Hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_hover)
+  - [x] pip's options
+  - [x] package: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
+    Must `pip-cache update` before.
+- [x] [Completion](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_completion):
   - [x] pip's options
   - [x] package: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
     Must `pip-cache update` before.
 
 Other features:
 
-- [x] pre-commit-hooks
+- [x] [pre-commit-hooks](https://pre-commit.com/)
   - [x] linter
   - [x] formatter
 
@@ -90,7 +102,7 @@ Other features:
 
 ![diagnostic](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/13aa466d-62af-423a-a141-880b495750a7)
 
-### Document Hover
+### Hover
 
 ![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/0e74a423-b07a-459a-8fb4-10789f245265)
 
