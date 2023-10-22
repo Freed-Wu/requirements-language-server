@@ -1,4 +1,3 @@
-# type: ignore
 r"""Server
 ==========
 """
@@ -116,9 +115,9 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: list[TextEdit]
             """
             document = self.workspace.get_document(params.text_document.uri)
-            finder = FORMATTING_FINDER
-            finder.find_all(document.uri, self.trees[document.uri])
-            return finder.get_text_edits()
+            return FORMATTING_FINDER.get_text_edits(
+                document.uri, self.trees[document.uri]
+            )
 
         @self.feature(TEXT_DOCUMENT_DEFINITION)
         def definition(params: TextDocumentPositionParams) -> list[Location]:
@@ -236,8 +235,8 @@ class RequirementsLanguageServer(LanguageServer):
                             # even if cache is outdated,
                             # we still don't find because it is too slow
                             documentation=MarkupContent(
-                                kind=MarkupKind.Markdown,
-                                value=self.documents.get(x, NOT_FOUND),
+                                MarkupKind.Markdown,
+                                self.documents.get(x, NOT_FOUND),
                             ),
                             insert_text=x,
                         )
