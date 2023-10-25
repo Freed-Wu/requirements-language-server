@@ -2,6 +2,7 @@ r"""Finders
 ===========
 """
 import os
+from copy import deepcopy
 from typing import Literal
 
 import tree_sitter_requirements as requirements
@@ -10,7 +11,13 @@ from pip_cache import get_package_names
 from tree_sitter import Node, Tree
 
 from .tree_sitter_lsp import UNI, Finder
-from .tree_sitter_lsp.finders import RepeatedFinder, TypeFinder, UnsortedFinder
+from .tree_sitter_lsp.finders import (
+    ErrorFinder,
+    MissingFinder,
+    RepeatedFinder,
+    TypeFinder,
+    UnsortedFinder,
+)
 
 
 class InvalidPackageFinder(Finder):
@@ -216,3 +223,27 @@ class UnsortedRequirementFinder(UnsortedFinder):
         :rtype: bool
         """
         return uni.node.type == "requirement"
+
+
+FORMATTING_FINDER_CLASSES = [UnsortedRequirementFinder]
+
+
+DIAGNOSTICS_FINDER_CLASSES = [
+    ErrorFinder,
+    MissingFinder,
+    InvalidPackageFinder,
+    InvalidPathFinder,
+    RepeatedPackageFinder,
+    UnsortedRequirementFinder,
+]
+_RepeatedPackageFinder = deepcopy(RepeatedPackageFinder)
+_RepeatedPackageFinder.__init__.__annotations__["pep508"] = True
+DIAGNOSTICS_FINDER_CLASSES_PEP508 = [
+    OptionFinder,
+    ErrorFinder,
+    MissingFinder,
+    InvalidPackageFinder,
+    InvalidPathFinder,
+    _RepeatedPackageFinder,
+    UnsortedRequirementFinder,
+]

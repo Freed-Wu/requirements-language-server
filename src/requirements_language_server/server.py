@@ -37,16 +37,18 @@ from pygls.server import LanguageServer
 from . import NOT_FOUND, TEMPLATE
 from .documents import get_documents
 from .documents.option import OPTIONS, OPTIONS_WITH_EQUAL
-from .finders import InvalidPackageFinder, RepeatedPackageFinder
+from .finders import (
+    DIAGNOSTICS_FINDER_CLASSES,
+    DIAGNOSTICS_FINDER_CLASSES_PEP508,
+    FORMATTING_FINDER_CLASSES,
+    InvalidPackageFinder,
+    RepeatedPackageFinder,
+)
 from .tree_sitter_lsp import UNI
 from .tree_sitter_lsp.complete import get_completion_list_by_uri
 from .tree_sitter_lsp.diagnose import get_diagnostics
 from .tree_sitter_lsp.finders import PositionFinder, TypeFinder
-from .utils import (
-    DIAGNOSTICS_FINDERS,
-    DIAGNOSTICS_FINDERS_PEP508,
-    FORMATTING_FINDER,
-)
+from .tree_sitter_lsp.format import get_text_edits
 
 try:
     import tomllib as tomli
@@ -96,13 +98,13 @@ class RequirementsLanguageServer(LanguageServer):
             document = self.workspace.get_document(params.text_document.uri)
             self.trees[document.uri] = requirements.parse(document.source)
             if self.is_pep508(document.uri):
-                finders = DIAGNOSTICS_FINDERS_PEP508
+                classes = DIAGNOSTICS_FINDER_CLASSES_PEP508
             else:
-                finders = DIAGNOSTICS_FINDERS
+                classes = DIAGNOSTICS_FINDER_CLASSES
             diagnostics = get_diagnostics(
-                finders,
                 document.uri,
                 self.trees[document.uri],
+                classes,
             )
             self.publish_diagnostics(params.text_document.uri, diagnostics)
 
@@ -115,8 +117,10 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: list[TextEdit]
             """
             document = self.workspace.get_document(params.text_document.uri)
-            return FORMATTING_FINDER.get_text_edits(
-                document.uri, self.trees[document.uri]
+            return get_text_edits(
+                document.uri,
+                self.trees[document.uri],
+                FORMATTING_FINDER_CLASSES,  # type: ignore
             )
 
         @self.feature(TEXT_DOCUMENT_DEFINITION)
@@ -268,6 +272,8 @@ class RequirementsLanguageServer(LanguageServer):
         :type uri: str
         :rtype: bool
         """
+        if self.workspace.root_uri is None:
+            return False
         pyproject_uri = os.path.join(self.workspace.root_uri, "pyproject.toml")
         document = self.workspace.get_document(pyproject_uri)
         pyproject_path = UNI.uri2path(document.uri)
