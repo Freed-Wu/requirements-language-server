@@ -5,7 +5,6 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from contextlib import suppress
 from datetime import datetime
 
-from . import CONFIG
 from . import __name__ as NAME
 from . import __version__
 
@@ -30,16 +29,6 @@ def get_parser() -> ArgumentParser:
 
         shtab.add_argument_to(parser)
     parser.add_argument("--version", version=VERSION, action="version")
-    parser.add_argument(
-        "--print-config",
-        choices=["template", "cache", "all"],
-        help="print config value",
-    )
-    parser.add_argument(
-        "--generate-cache",
-        action="store_true",
-        help="generate cache",
-    )
     parser.add_argument(
         "--check",
         nargs="*",
@@ -66,29 +55,23 @@ def main() -> None:
     parser = get_parser()
     args = parser.parse_args()
 
+    from tree_sitter_lsp.diagnose import check
+    from tree_sitter_lsp.format import format
     from tree_sitter_requirements import parse
 
-    from .tree_sitter_lsp.diagnose import check
-    from .tree_sitter_lsp.format import format
-    from .utils import DIAGNOSTICS_FINDERS, FORMATTING_FINDER
+    from .finders import DIAGNOSTICS_FINDER_CLASSES, FORMATTING_FINDER_CLASSES
+    from .utils import get_filetype
 
-    format(args.format, FORMATTING_FINDER, parse)
-    result = check(args.check, DIAGNOSTICS_FINDERS, parse, args.color)
+    format(args.format, parse, FORMATTING_FINDER_CLASSES, get_filetype)  # type: ignore
+    result = check(
+        args.check,
+        parse,
+        DIAGNOSTICS_FINDER_CLASSES,
+        get_filetype,
+        args.color,
+    )
     if args.format or args.check:
         exit(result)
-    if args.print_config:
-        print(
-            CONFIG.get(
-                args.print_config,
-                "\n".join([k + ": " + v for k, v in CONFIG.items()]),
-            )
-        )
-        return None
-    if args.generate_cache:
-        from .documents.package import generate_cache
-
-        generate_cache()
-        return None
 
     from .server import RequirementsLanguageServer
 

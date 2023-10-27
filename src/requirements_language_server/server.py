@@ -6,7 +6,6 @@ from typing import Any
 
 import tree_sitter_requirements as requirements
 from lsprotocol.types import (
-    INITIALIZE,
     TEXT_DOCUMENT_COMPLETION,
     TEXT_DOCUMENT_DEFINITION,
     TEXT_DOCUMENT_DID_CHANGE,
@@ -24,31 +23,28 @@ from lsprotocol.types import (
     DocumentLink,
     DocumentLinkParams,
     Hover,
-    InitializeParams,
     Location,
     MarkupContent,
     MarkupKind,
     TextDocumentPositionParams,
     TextEdit,
 )
-from pip_cache import get_package_names
 from pygls.server import LanguageServer
+from tree_sitter_lsp import UNI
+from tree_sitter_lsp.complete import get_completion_list_by_uri
+from tree_sitter_lsp.diagnose import get_diagnostics
+from tree_sitter_lsp.finders import PositionFinder, TypeFinder
+from tree_sitter_lsp.format import get_text_edits
 
-from . import NOT_FOUND, TEMPLATE
-from .documents import get_documents
-from .documents.option import OPTIONS, OPTIONS_WITH_EQUAL
+from . import FILETYPE
 from .finders import (
     DIAGNOSTICS_FINDER_CLASSES,
-    DIAGNOSTICS_FINDER_CLASSES_PEP508,
     FORMATTING_FINDER_CLASSES,
     InvalidPackageFinder,
     RepeatedPackageFinder,
 )
-from .tree_sitter_lsp import UNI
-from .tree_sitter_lsp.complete import get_completion_list_by_uri
-from .tree_sitter_lsp.diagnose import get_diagnostics
-from .tree_sitter_lsp.finders import PositionFinder, TypeFinder
-from .tree_sitter_lsp.format import get_text_edits
+from .misc.option import OPTIONS, OPTIONS_WITH_EQUAL
+from .packages import search_document, search_package_names
 
 try:
     import tomllib as tomli
@@ -70,21 +66,7 @@ class RequirementsLanguageServer(LanguageServer):
         :rtype: None
         """
         super().__init__(*args, **kwargs)
-        self.template = ""
-        self.documents = {}
         self.trees = {}
-
-        @self.feature(INITIALIZE)
-        def initialize(params: InitializeParams) -> None:
-            r"""Initialize.
-
-            :param params:
-            :type params: InitializeParams
-            :rtype: None
-            """
-            opts = params.initialization_options
-            self.template = getattr(opts, "template", TEMPLATE)
-            self.documents = get_documents()
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
         @self.feature(TEXT_DOCUMENT_DID_CHANGE)
@@ -95,16 +77,14 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: DidChangeTextDocumentParams
             :rtype: None
             """
+            filetype = self.get_filetype(params.text_document.uri)
             document = self.workspace.get_document(params.text_document.uri)
             self.trees[document.uri] = requirements.parse(document.source)
-            if self.is_pep508(document.uri):
-                classes = DIAGNOSTICS_FINDER_CLASSES_PEP508
-            else:
-                classes = DIAGNOSTICS_FINDER_CLASSES
             diagnostics = get_diagnostics(
                 document.uri,
                 self.trees[document.uri],
-                classes,
+                DIAGNOSTICS_FINDER_CLASSES,
+                filetype,
             )
             self.publish_diagnostics(params.text_document.uri, diagnostics)
 
@@ -200,18 +180,11 @@ class RequirementsLanguageServer(LanguageServer):
                     uni.get_range(),
                 )
             if uni.node.type == "package":
-                doc = self.documents.get(text, NOT_FOUND)
-                # if cache is outdated
-                if doc == NOT_FOUND:
-                    from .documents.package import search_document
-
-                    doc = search_document(text, TEMPLATE)
-                if not doc:
-                    return None
-                return Hover(
-                    MarkupContent(MarkupKind.Markdown, doc),
-                    uni.get_range(),
-                )
+                if doc := search_document(text):
+                    return Hover(
+                        MarkupContent(MarkupKind.Markdown, doc),
+                        uni.get_range(),
+                    )
 
         @self.feature(TEXT_DOCUMENT_COMPLETION)
         def completions(params: CompletionParams) -> CompletionList:
@@ -222,7 +195,7 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: CompletionList
             """
             document = self.workspace.get_document(params.text_document.uri)
-            uni = PositionFinder(params.position).find(
+            uni = PositionFinder(params.position, right_equal=True).find(
                 document.uri, self.trees[document.uri]
             )
             if uni is None:
@@ -234,17 +207,12 @@ class RequirementsLanguageServer(LanguageServer):
                     False,
                     [
                         CompletionItem(
-                            x,
+                            k,
                             kind=CompletionItemKind.Module,
-                            # even if cache is outdated,
-                            # we still don't find because it is too slow
-                            documentation=MarkupContent(
-                                MarkupKind.Markdown,
-                                self.documents.get(x, NOT_FOUND),
-                            ),
-                            insert_text=x,
+                            documentation=v,
+                            insert_text=k,
                         )
-                        for x in get_package_names(text)
+                        for k, v in search_package_names(text).items()
                     ],
                 )
             # uni.node.type != "option" due to incomplete
@@ -265,22 +233,22 @@ class RequirementsLanguageServer(LanguageServer):
             document = self.workspace.get_document(params.text_document.uri)
             return get_completion_list_by_uri(document.uri, text, "*.txt")
 
-    def is_pep508(self, uri: str) -> bool:
-        r"""Is pep508.
+    def get_filetype(self, uri: str) -> FILETYPE:
+        r"""Get filetype.
 
         :param uri:
         :type uri: str
-        :rtype: bool
+        :rtype: FILETYPE
         """
         if self.workspace.root_uri is None:
-            return False
+            return "pip"
         pyproject_uri = os.path.join(self.workspace.root_uri, "pyproject.toml")
         document = self.workspace.get_document(pyproject_uri)
         pyproject_path = UNI.uri2path(document.uri)
         path = UNI.uri2path(uri)
         if path in self.get_dependencies_files(pyproject_path):
-            return True
-        return False
+            return "pep508"
+        return "pip"
 
     @staticmethod
     def get_dependencies_files(pyproject_path: str) -> list[str]:

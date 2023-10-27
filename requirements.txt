@@ -1,10 +1,8 @@
 #!/usr/bin/env -S pip install -r
 
-colorama
-jinja2
-jsonschema
+# get_package_names
 pip-cache
 platformdirs
-pygls
 tomli; python_version < "3.11"
+tree-sitter-lsp >= 0.0.3
 tree-sitter-requirements

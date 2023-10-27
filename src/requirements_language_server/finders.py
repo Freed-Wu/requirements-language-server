@@ -2,22 +2,22 @@ r"""Finders
 ===========
 """
 import os
-from copy import deepcopy
 from typing import Literal
 
 import tree_sitter_requirements as requirements
 from lsprotocol.types import Diagnostic, DiagnosticSeverity
 from pip_cache import get_package_names
 from tree_sitter import Node, Tree
-
-from .tree_sitter_lsp import UNI, Finder
-from .tree_sitter_lsp.finders import (
+from tree_sitter_lsp import UNI, Finder
+from tree_sitter_lsp.finders import (
     ErrorFinder,
     MissingFinder,
     RepeatedFinder,
     TypeFinder,
     UnsortedFinder,
 )
+
+from . import FILETYPE
 
 
 class InvalidPackageFinder(Finder):
@@ -151,7 +151,7 @@ class RepeatedPackageFinder(RepeatedFinder):
 
     def __init__(
         self,
-        pep508: bool = False,
+        filetype: FILETYPE = "pip",
         message: str = "{{uni.get_text()}}: is repeated on {{_uni}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
@@ -167,7 +167,7 @@ class RepeatedPackageFinder(RepeatedFinder):
         :rtype: None
         """
         super().__init__(message, severity)
-        self.pep508 = pep508
+        self.filetype = filetype
 
     def is_include_node(self, node: Node) -> bool:
         r"""Is include node.
@@ -176,7 +176,7 @@ class RepeatedPackageFinder(RepeatedFinder):
         :type node: Node
         :rtype: bool
         """
-        return node.type == "path" and not self.pep508
+        return node.type == "path" and self.filetype == "pip"
 
     def parse(self, code: bytes) -> Tree:
         r"""Parse.
@@ -234,16 +234,5 @@ DIAGNOSTICS_FINDER_CLASSES = [
     InvalidPackageFinder,
     InvalidPathFinder,
     RepeatedPackageFinder,
-    UnsortedRequirementFinder,
-]
-_RepeatedPackageFinder = deepcopy(RepeatedPackageFinder)
-_RepeatedPackageFinder.__init__.__annotations__["pep508"] = True
-DIAGNOSTICS_FINDER_CLASSES_PEP508 = [
-    OptionFinder,
-    ErrorFinder,
-    MissingFinder,
-    InvalidPackageFinder,
-    InvalidPathFinder,
-    _RepeatedPackageFinder,
     UnsortedRequirementFinder,
 ]
