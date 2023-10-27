@@ -1,6 +1,6 @@
 r"""Test package"""
-from requirements_language_server import NOT_FOUND
-from requirements_language_server.documents.package import search_document
+from requirements_language_server.packages import search_document
+from requirements_language_server.packages.pypi import NOT_FOUND
 
 
 class Test:
