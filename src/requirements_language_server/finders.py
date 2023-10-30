@@ -2,7 +2,8 @@ r"""Finders
 ===========
 """
 import os
-from typing import Literal
+from dataclasses import dataclass
+from typing import Any, Literal
 
 import tree_sitter_requirements as requirements
 from lsprotocol.types import Diagnostic, DiagnosticSeverity
@@ -11,21 +12,46 @@ from tree_sitter import Node, Tree
 from tree_sitter_lsp import UNI, Finder
 from tree_sitter_lsp.finders import (
     ErrorFinder,
-    MissingFinder,
+    QueryFinder,
     RepeatedFinder,
     TypeFinder,
     UnsortedFinder,
 )
+from tree_sitter_requirements._core import _language
 
 from . import FILETYPE
+from .utils import get_query
 
 
-class InvalidPackageFinder(Finder):
+@dataclass(init=False)
+class ErrorRequirementsFinder(ErrorFinder):
+    r"""Errorrequirementsfinder."""
+
+    def __init__(
+        self,
+        message: str = "{{uni.get_text()}}: error",
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    ) -> None:
+        r"""Init.
+
+        :param filetype:
+        :type filetype: str
+        :param message:
+        :type message: str
+        :param severity:
+        :type severity: DiagnosticSeverity
+        :rtype: None
+        """
+        super().__init__(_language, message, severity)
+
+
+@dataclass(init=False)
+class InvalidPackageFinder(QueryFinder):
     r"""Invalidpackagefinder."""
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such package",
+        message: str = "{{uni.get_text()}}: no such file",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -36,22 +62,63 @@ class InvalidPackageFinder(Finder):
         :type severity: DiagnosticSeverity
         :rtype: None
         """
-        super().__init__(message, severity)
+        query = get_query("package")
+        super().__init__(query, message, severity)
 
-    def __call__(self, uni: UNI) -> bool:
-        r"""Call.
+    def capture2uni(self, capture: tuple[Node, str], uri: str) -> UNI | None:
+        r"""Capture2uni.
 
-        :param uni:
-        :type uni: UNI
-        :rtype: bool
+        :param capture:
+        :type capture: tuple[Node, str]
+        :param uri:
+        :type uri: str
+        :rtype: UNI | None
         """
+        node, _ = capture
+        uni = UNI(uri, node)
         text = uni.get_text()
-        return uni.node.type == "package" and text not in get_package_names(
-            text
-        )
+        return uni if text not in get_package_names(text) else None
 
 
-class InvalidPathFinder(Finder):
+@dataclass(init=False)
+class OptionFinder(QueryFinder):
+    r"""Optionfinder."""
+
+    def __init__(
+        self,
+        filetype: FILETYPE,
+        message: str = "setuptools only supports PEP508",
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    ) -> None:
+        r"""Init.
+
+        :param filetype:
+        :type filetype: FILETYPE
+        :param message:
+        :type message: str
+        :param severity:
+        :type severity: DiagnosticSeverity
+        :rtype: None
+        """
+        query = get_query("option")
+        super().__init__(query, message, severity)
+        if filetype == "pip":
+            self.find_all = self.fake_find_all
+
+    def fake_find_all(self, *args: Any, **kwargs: Any) -> list:
+        r"""Fake find all.
+
+        :param args:
+        :type args: Any
+        :param kwargs:
+        :type kwargs: Any
+        :rtype: list
+        """
+        return []
+
+
+@dataclass(init=False)
+class InvalidPathFinder(QueryFinder):
     r"""Invalidpathfinder."""
 
     def __init__(
@@ -67,7 +134,49 @@ class InvalidPathFinder(Finder):
         :type severity: DiagnosticSeverity
         :rtype: None
         """
-        super().__init__(message, severity)
+        query = get_query("path")
+        super().__init__(query, message, severity)
+
+    @staticmethod
+    def get_option_type(option: str) -> Literal["file", "dir"]:
+        r"""Get option type.
+
+        :param option:
+        :type option: str
+        :rtype: Literal["file", "dir"]
+        """
+        if option in ["-e", "--editable"]:
+            return "dir"
+        return "file"
+
+    def captures2unis(
+        self, captures: list[tuple[Node, str]], uri: str
+    ) -> list[UNI]:
+        r"""Captures2unis.
+
+        :param captures:
+        :type captures: list[tuple[Node, str]]
+        :param uri:
+        :type uri: str
+        :rtype: list[UNI]
+        """
+        kind = "file"
+        unis = []
+        for capture in captures:
+            node, label = capture
+            uni = UNI(uri, node)
+            if label == "option":
+                kind = self.get_option_type(uni.get_text())
+                continue
+            path = self.uni2path(uni)
+            if (
+                kind == "file"
+                and not os.path.isfile(path)
+                or kind == "dir"
+                and not os.path.isdir(path)
+            ):
+                unis += [uni]
+        return unis
 
     @staticmethod
     def get_option(uni: UNI) -> str:
@@ -83,36 +192,6 @@ class InvalidPathFinder(Finder):
                 option = UNI.node2text(children[0])
         return option
 
-    @staticmethod
-    def get_option_type(option: str) -> Literal["file", "dir", ""]:
-        r"""Get option type.
-
-        :param option:
-        :type option: str
-        :rtype: Literal["file", "dir", ""]
-        """
-        if option in ["-r", "--requirement", "-c", "--constraint"]:
-            return "file"
-        if option in ["-e", "--editable"]:
-            return "dir"
-        return ""
-
-    def __call__(self, uni: UNI) -> bool:
-        r"""Call.
-
-        :param uni:
-        :type uni: UNI
-        :rtype: bool
-        """
-        path = self.uni2path(uni)
-        option = self.get_option(uni)
-        return uni.node.type == "path" and not (
-            os.path.isfile(path)
-            and self.get_option_type(option) == "file"
-            or os.path.isdir(path)
-            and self.get_option_type(option) == "dir"
-        )
-
     def uni2diagnostic(self, uni: UNI) -> Diagnostic:
         r"""Uni2diagnostic.
 
@@ -125,25 +204,6 @@ class InvalidPathFinder(Finder):
             self.severity,
             _type=self.get_option_type(self.get_option(uni)),
         )
-
-
-class OptionFinder(TypeFinder):
-    r"""Optionfinder."""
-
-    def __init__(
-        self,
-        message: str = "setuptools only supports PEP508",
-        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
-    ) -> None:
-        r"""Init.
-
-        :param message:
-        :type message: str
-        :param severity:
-        :type severity: DiagnosticSeverity
-        :rtype: None
-        """
-        super().__init__("option", message, severity)
 
 
 class RepeatedPackageFinder(RepeatedFinder):
@@ -229,10 +289,10 @@ FORMATTING_FINDER_CLASSES = [UnsortedRequirementFinder]
 
 
 DIAGNOSTICS_FINDER_CLASSES = [
-    ErrorFinder,
-    MissingFinder,
+    ErrorRequirementsFinder,
     InvalidPackageFinder,
     InvalidPathFinder,
     RepeatedPackageFinder,
+    OptionFinder,
     UnsortedRequirementFinder,
 ]
