@@ -1,6 +1,7 @@
 [build-system]
 requires = [
   "setuptools_scm[toml] >= 6.2",
+  "git+https://github.com/Freed-Wu/shtab",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -48,6 +49,10 @@ requirements-language-server = "requirements_language_server.__main__:main"
 
 [tool.setuptools.package-data]
 requirements_language_server = ["py.typed", "assets/**"]
+
+[tool.setuptools.data-files]
+"share/bash-completion/completions" = ["sdist/requirements-language-server"]
+"share/zsh/site-functions" = ["sdist/_requirements-language-server"]
 
 [tool.setuptools.dynamic.dependencies]
 file = "requirements.txt"
