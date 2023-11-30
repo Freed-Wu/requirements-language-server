@@ -2,7 +2,6 @@
 requires = [
   "setuptools_scm[toml] >= 6.2",
   "setuptools-generate >= 0.0.6",
-  "platformdirs",
 ]
 build-backend = "setuptools.build_meta"
 
