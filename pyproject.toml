@@ -1,7 +1,6 @@
 [build-system]
 requires = [
   "setuptools_scm[toml] >= 6.2",
-  "setuptools-generate >= 0.0.6",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -50,11 +49,6 @@ requirements-language-server = "requirements_language_server.__main__:main"
 [tool.setuptools.package-data]
 requirements_language_server = ["py.typed", "assets/**"]
 
-[tool.setuptools.data-files]
-"share/man/man1" = ["sdist/requirements-language-server.1"]
-"share/bash-completion/completions" = ["sdist/requirements-language-server"]
-"share/zsh/site-functions" = ["sdist/_requirements-language-server"]
-
 [tool.setuptools.dynamic.dependencies]
 file = "requirements.txt"
 
@@ -68,9 +62,6 @@ file = "requirements/dev.txt"
 
 [tool.setuptools_scm]
 write_to = "src/requirements_language_server/_version.py"
-
-[tool.setuptools-generate]
-write-to = "src/requirements_language_server/_metainfo.py"
 
 [tool.mdformat]
 number = true
