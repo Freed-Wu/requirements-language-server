@@ -4,5 +4,5 @@
 pip-cache
 platformdirs
 tomli; python_version < "3.11"
-tree-sitter-lsp >= 0.0.3
+tree-sitter-lsp >= 0.0.6
 tree-sitter-requirements

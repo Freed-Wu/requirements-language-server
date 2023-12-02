@@ -231,7 +231,7 @@ class RequirementsLanguageServer(LanguageServer):
                     ],
                 )
             document = self.workspace.get_document(params.text_document.uri)
-            return get_completion_list_by_uri(document.uri, text, "*.txt")
+            return get_completion_list_by_uri(text, document.uri, "*.txt")
 
     def get_filetype(self, uri: str) -> FILETYPE:
         r"""Get filetype.
