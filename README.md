@@ -104,13 +104,13 @@ Other features:
 
 ### Hover
 
-![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/0e74a423-b07a-459a-8fb4-10789f245265)
+![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/03237cb6-72ce-4d2f-a879-db18d595fa39)
 
 ![option](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/78a7b5ec-a9dd-46c2-b22b-4dc0123b6f0e)
 
 ### Completion
 
-![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/d3a258ef-3d99-4666-a015-cc516bdb58fd)
+![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/0f1f9e31-3933-4f56-9cf9-5db6e044caca)
 
 ![option](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/1a8de48c-9138-4a0c-97a4-0c7ea3030be0)
 

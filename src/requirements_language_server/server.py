@@ -44,7 +44,7 @@ from .finders import (
     RepeatedPackageFinder,
 )
 from .misc.option import OPTIONS, OPTIONS_WITH_EQUAL
-from .packages import search_document, search_package_names
+from .packages import search_package_names
 
 try:
     import tomllib as tomli
@@ -180,7 +180,7 @@ class RequirementsLanguageServer(LanguageServer):
                     uni.get_range(),
                 )
             if uni.node.type == "package":
-                if doc := search_document(text):
+                if doc := search_package_names(text, False)[text]:
                     return Hover(
                         MarkupContent(MarkupKind.Markdown, doc),
                         uni.get_range(),
@@ -209,10 +209,12 @@ class RequirementsLanguageServer(LanguageServer):
                         CompletionItem(
                             k,
                             kind=CompletionItemKind.Module,
-                            documentation=v,
+                            documentation=MarkupContent(
+                                MarkupKind.Markdown, doc
+                            ),
                             insert_text=k,
                         )
-                        for k, v in search_package_names(text).items()
+                        for k, doc in search_package_names(text).items()
                     ],
                 )
             # uni.node.type != "option" due to incomplete

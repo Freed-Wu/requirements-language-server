@@ -1,1 +1,21 @@
 {{ metadata["summary"] }}
+- version: **{{ metadata["version"] }}**
+- license: {% if metadata["license"] %}**{{ metadata["license"] }}**{% endif %}
+- author: {{ info.author }} <mailto:{{ metadata["author_email"].split()[-1]
+.strip("<>") }}>
+{%-if info %}
+- requires:
+  1. `python {{ metadata["requires_python"] }}`
+{%-for require in info.requires %}
+  {{ loop.index + 1 }}. `{{ require }}`
+{%-endfor %}
+{%-else %}
+{%-endif %}
+- urls:
+{%-for url in metadata["project_url"] %}
+  {{ url.split(", ")[0].lower() }}: <{{ url.split(", ")[1] }}>
+{%-endfor %}
+- extras:
+{%-for extra in metadata["provides_extra"] %}
+  {{ loop.index }}. *{{ extra }}*
+{%-endfor %}
