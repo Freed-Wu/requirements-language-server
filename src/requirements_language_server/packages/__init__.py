@@ -1,4 +1,4 @@
 r"""Packages
 ============
 """
-from .pypi import search_document, search_package_names
+from .pypi import search_package_names
