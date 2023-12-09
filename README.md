@@ -84,7 +84,6 @@ Features:
 - [x] [Hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_hover)
   - [x] pip's options
   - [x] package: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
-    Must `pip-cache update` before.
 - [x] [Completion](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_completion):
   - [x] pip's options
   - [x] package: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
