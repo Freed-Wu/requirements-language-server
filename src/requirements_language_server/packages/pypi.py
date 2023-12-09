@@ -72,7 +72,7 @@ def search_package_names(
     for pkg in ENV.iter_installed_distributions():
         if count == 0:
             break
-        if not pkg.canonical_name.startswith(name):
+        if pkg.canonical_name not in package_names:
             continue
         info = None
         if use_info:
