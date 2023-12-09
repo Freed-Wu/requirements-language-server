@@ -225,10 +225,10 @@ class RequirementsLanguageServer(LanguageServer):
                         CompletionItem(
                             x,
                             kind=CompletionItemKind.Keyword,
-                            documentation=OPTIONS_WITH_EQUAL[x],
+                            documentation=doc,
                             insert_text=x,
                         )
-                        for x in OPTIONS_WITH_EQUAL
+                        for x, doc in OPTIONS_WITH_EQUAL.items()
                         if x.startswith(text)
                     ],
                 )
