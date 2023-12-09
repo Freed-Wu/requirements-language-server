@@ -8,11 +8,35 @@ from typing import Any
 from jinja2 import Template
 from pip._internal.commands.show import _PackageInfo, search_packages_info
 from pip._internal.metadata import get_environment
-from pip_cache import get_package_names
+from pip_cache import index_filename
 from platformdirs import user_config_dir
+
+lines = []
+
+
+def update_lines():
+    r"""Update lines."""
+    from pip_cache import update_package_list
+
+    update_package_list()
+    global lines
+    with open(index_filename) as f:
+        lines = [line.strip() for line in f.readlines()]
+
+
+try:
+    with open(index_filename) as f:
+        lines = [line.strip() for line in f.readlines()]
+except FileNotFoundError:
+    from threading import Thread
+
+    Thread(target=update_lines).start()
 
 NOT_FOUND = "Not found installed package!"
 ENV = get_environment(None)
+metadata = list(
+    dist.metadata_dict for dist in ENV.iter_installed_distributions()
+)
 PATH = os.path.join(user_config_dir("pip"), "template.md.j2")
 if not os.path.exists(PATH):
     PATH = os.path.join(
@@ -64,20 +88,24 @@ def search_package_names(
     """
     if use_info is None:
         use_info = not search
-    package_names = {
+    package_names: dict[str, str] = {
         pkgname: NOT_FOUND
-        for pkgname in (get_package_names(name) if search else [name])
+        for pkgname in (
+            [line for line in lines if line.startswith(name)]
+            if search
+            else [name]
+        )
     }
     count = len(package_names)
-    for pkg in ENV.iter_installed_distributions():
-        if pkg.canonical_name not in package_names:
+    for metadatum in metadata:
+        if metadatum["name"] not in package_names:
             continue
         info = None
         if use_info:
             with suppress(IndexError):
-                info = next(iter(search_packages_info([pkg.canonical_name])))
-        package_names[pkg.canonical_name] = render_document(
-            pkg.metadata_dict, info, template
+                info = next(iter(search_packages_info([metadatum["name"]])))
+        package_names[metadatum["name"]] = render_document(
+            metadatum, info, template
         )
         count -= 1
         if count == 0:

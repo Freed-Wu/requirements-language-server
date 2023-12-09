@@ -1,8 +1,7 @@
 {{ metadata["summary"] }}
 - version: **{{ metadata["version"] }}**
 - license: {% if metadata["license"] %}**{{ metadata["license"] }}**{% endif %}
-- author: {{ info.author }} <mailto:{{ metadata["author_email"].split()[-1]
-.strip("<>") }}>
+- author: {{ info.author }} {% if metadata["author_email"] %}<mailto:{{ metadata["author_email"].split()[-1].strip("<>") }}>{% endif %}
 {%-if info %}
 - requires:
   1. `python {{ metadata["requires_python"] }}`
