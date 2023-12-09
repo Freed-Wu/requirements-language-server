@@ -70,8 +70,6 @@ def search_package_names(
     }
     count = len(package_names)
     for pkg in ENV.iter_installed_distributions():
-        if count == 0:
-            break
         if pkg.canonical_name not in package_names:
             continue
         info = None
@@ -82,4 +80,6 @@ def search_package_names(
             pkg.metadata_dict, info, template
         )
         count -= 1
+        if count == 0:
+            break
     return package_names
