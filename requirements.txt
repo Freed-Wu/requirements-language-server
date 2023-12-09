@@ -1,8 +1,9 @@
 #!/usr/bin/env -S pip install -r
 
-# get_package_names
+# update_package_names()
 pip-cache
 platformdirs
 tomli; python_version < "3.11"
-tree-sitter-lsp >= 0.0.6
+# get_completion_list_by_enum()
+tree-sitter-lsp >= 0.0.7
 tree-sitter-requirements
