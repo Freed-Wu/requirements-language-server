@@ -10,7 +10,7 @@ from jinja2 import Template
 from pip._internal.metadata import get_default_environment
 from pip._internal.metadata.base import BaseDistribution
 from pip._vendor.packaging.utils import NormalizedName, canonicalize_name
-from platformdirs import user_config_dir
+from platformdirs import user_cache_dir, user_config_dir
 
 proxy = ServerProxy("https://pypi.python.org/pypi")
 pkginfos: dict[NormalizedName, str] = {}
@@ -26,6 +26,7 @@ if not os.path.exists(PATH):
     )
 with open(PATH, "r") as f:
     TEMPLATE = f.read()
+CACHE_PATH = os.path.join(user_cache_dir("pip"), "requirements.txt")
 installed: dict[NormalizedName, BaseDistribution] = {
     dist.canonical_name: dist
     for dist in get_default_environment().iter_all_distributions()
@@ -55,16 +56,37 @@ def get_requiring_packages(current_dist: BaseDistribution) -> Iterator[str]:
     )
 
 
-async def update_pkginfos() -> None:
+def update_pkginfos() -> None:
     r"""Update pkginfos.
 
     :rtype: None
     """
     global pkginfos
-    Thread(target=update_installed_pkginfos).start()
-    for pkgname in proxy.list_packages():  # type: ignore
+    for pkgname in installed:
+        Thread(target=render_document, args=(pkgname, False, False)).start()
+    Thread(target=update_pkgnames).start()
+
+
+def update_pkgnames():
+    r"""Update pkgnames."""
+    global pkginfos
+    is_updated = False
+    pkgnames: list[NormalizedName]
+    if os.path.isfile(CACHE_PATH):
+        with open(CACHE_PATH) as f:
+            pkgnames = [pkgname.strip() for pkgname in f.readlines()]  # type: ignore
+    else:
+        # IO bound
+        pkgnames = proxy.list_packages()  # type: ignore
+        is_updated = True
+    for pkgname in pkgnames:  # type: ignore
         if pkgname not in pkginfos:
             pkginfos[pkgname] = NOT_FOUND
+    if not is_updated:
+        pkgnames = proxy.list_packages()  # type: ignore
+        if pkgnames != []:
+            with open(CACHE_PATH, "w") as f:
+                f.writelines(pkgname + "\n" for pkgname in pkgnames)
 
 
 def render_document(
@@ -81,6 +103,11 @@ def render_document(
     :param has_required_by:
     :type has_required_by: bool
     """
+    global pkginfos
+    pkginfo = pkginfos.get(pkgname)
+    # cache hit
+    if pkginfo and not (pkginfo.find("1. ...") and pkginfo.find("2. ...")):
+        return pkginfo
     if dist := installed.get(pkgname):
         requires = required_by = None
         if has_requires:
@@ -89,26 +116,8 @@ def render_document(
             )
         if has_required_by:
             required_by = sorted(get_requiring_packages(dist), key=str.lower)
-        return Template(TEMPLATE).render(
+        pkginfos[pkgname] = Template(TEMPLATE).render(
             dist=dist, requires=requires, required_by=required_by
         )
+        return pkginfos[pkgname]
     return NOT_FOUND
-
-
-def update_installed_pkginfos(
-    has_requires: bool = False, has_required_by: bool = False
-) -> None:
-    r"""Update installed pkginfos.
-
-    :param has_requires:
-    :type has_requires: bool
-    :param has_required_by:
-    :type has_required_by: bool
-    :rtype: None
-    """
-    global pkginfos
-    for dist in installed.values():
-        pkgname = dist.canonical_name
-        pkginfos[pkgname] = render_document(
-            pkgname, has_requires, has_required_by
-        )

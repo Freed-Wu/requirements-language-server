@@ -1,7 +1,6 @@
 r"""Server
 ==========
 """
-import asyncio
 import os
 from typing import Any
 
@@ -72,8 +71,8 @@ class RequirementsLanguageServer(LanguageServer):
         self.trees = {}
 
         @self.feature(INITIALIZE)
-        async def initialize(params: InitializeParams) -> None:
-            asyncio.create_task(update_pkginfos())
+        def initialize(params: InitializeParams) -> None:
+            update_pkginfos()
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
         @self.feature(TEXT_DOCUMENT_DID_CHANGE)
@@ -167,7 +166,7 @@ class RequirementsLanguageServer(LanguageServer):
             ]
 
         @self.feature(TEXT_DOCUMENT_HOVER)
-        async def hover(params: TextDocumentPositionParams) -> Hover | None:
+        def hover(params: TextDocumentPositionParams) -> Hover | None:
             r"""Hover. ``render_document()`` is slow, so we use ``async``.
 
             :param params:
