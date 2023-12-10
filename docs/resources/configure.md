@@ -5,23 +5,20 @@ You can customize the document hover template. A default template is
 The syntax rule is [jinja](https://docs.jinkan.org/docs/jinja2/templates.html).
 The template path is decided by your OS:
 
-```shell
-$ requirements-language-server --print-config template
-/home/wzy/.config/pip/template.md.j2
-```
-
-You can generate cache by `requirements-language-server --generate-cache` to
-fasten document hover and completion. Every time you change template, the cache
-must be regenerated.
-
-```shell
-$ requirements-language-server --print-config cache
-/home/wzy/.cache/pip/pip.json
-```
+- `~/.config/pip/template.md.j2`
+- For windows, change `~/.config` to `~/AppData/Local`
+- For macOS, change `~/.config` to `~/Library`
 
 ## (Neo)[Vim](https://www.vim.org)
 
+For vim:
+
+- Change `~/.config/nvim` to `~/.vim`
+- Change `init.vim` to `vimrc`
+
 ### [coc.nvim](https://github.com/neoclide/coc.nvim)
+
+`~/.config/nvim/coc-settings.json`:
 
 ```json
 {
@@ -38,6 +35,8 @@ $ requirements-language-server --print-config cache
 
 ### [vim-lsp](https://github.com/prabirshrestha/vim-lsp)
 
+`~/.config/nvim/init.vim`:
+
 ```vim
 if executable('requirements-language-server')
   augroup lsp
@@ -53,9 +52,11 @@ endif
 
 ## [Neovim](https://neovim.io)
 
+`~/.config/nvim/init.lua`:
+
 ```lua
 vim.api.nvim_create_autocmd({ "BufEnter" }, {
-  pattern = { "requirements*.txt*" },
+  pattern = { "requirements.txt", "requirements/*.txt" },
   callback = function()
     vim.lsp.start({
       name = "requirements",
@@ -67,15 +68,44 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 
 ## [Emacs](https://www.gnu.org/software/emacs)
 
-```elisp
+`~/.emacs.d/init.el`:
+
+```lisp
 (make-lsp-client :new-connection
 (lsp-stdio-connection
   `(,(executable-find "requirements-language-server")))
-  :activation-fn (lsp-activate-on "requirements*.txt*")
+  :activation-fn (lsp-activate-on "requirements.txt" "requirements/*.txt")
   :server-id "requirements")))
 ```
 
+## [Helix](https://helix-editor.com/)
+
+`~/.config/helix/languages.toml`:
+
+```toml
+[[language]]
+name = "requirements"
+language-servers = [ "requirements-language-server",]
+
+[language_server.requirements-language-server]
+command = "requirements-language-server"
+```
+
+## [KaKoune](https://kakoune.org/)
+
+### [kak-lsp](https://github.com/kak-lsp/kak-lsp)
+
+`~/.config/kak-lsp/kak-lsp.toml`:
+
+```toml
+[language_server.requirements-language-server]
+filetypes = [ "requirements",]
+command = "requirements-language-server"
+```
+
 ## [Sublime](https://www.sublimetext.com)
+
+`~/.config/sublime-text-3/Packages/Preferences.sublime-settings`:
 
 ```json
 {
