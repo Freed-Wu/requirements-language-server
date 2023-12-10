@@ -1,6 +1,5 @@
 r"""Test package"""
-from requirements_language_server.packages import search_package_names
-from requirements_language_server.packages.pypi import NOT_FOUND
+from requirements_language_server.packages import NOT_FOUND, render_document
 
 
 class Test:
@@ -12,6 +11,4 @@ class Test:
 
         :rtype: None
         """
-        assert search_package_names("pip", False)["pip"] != NOT_FOUND
-        assert search_package_names("pip", True)["pip"] != NOT_FOUND
-        assert search_package_names("", False)[""] == NOT_FOUND
+        assert render_document("pip") != NOT_FOUND  # type: ignore
