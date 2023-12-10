@@ -8,35 +8,30 @@ from typing import Any
 from jinja2 import Template
 from pip._internal.commands.show import _PackageInfo, search_packages_info
 from pip._internal.metadata import get_environment
-from pip_cache import index_filename
 from platformdirs import user_config_dir
 
-lines = []
+pkgnames: list[str] = []
+metadata = []
 
 
-def update_lines():
-    r"""Update lines."""
-    from pip_cache import update_package_list
+async def update_pkgnames():
+    r"""Update pkgnames."""
+    global pkgnames
+    import xmlrpc.client as xmlrpclib
 
-    update_package_list()
-    global lines
-    with open(index_filename) as f:
-        lines = [line.strip() for line in f.readlines()]
+    pkgnames = xmlrpclib.ServerProxy("https://pypi.python.org/pypi").list_packages()  # type: ignore
 
 
-try:
-    with open(index_filename) as f:
-        lines = [line.strip() for line in f.readlines()]
-except FileNotFoundError:
-    from threading import Thread
+async def update_metadata():
+    r"""Update metadata."""
+    global metadata
+    ENV = get_environment(None)
+    metadata = list(
+        dist.metadata_dict for dist in ENV.iter_installed_distributions()
+    )
 
-    Thread(target=update_lines).start()
 
 NOT_FOUND = "Not found installed package!"
-ENV = get_environment(None)
-metadata = list(
-    dist.metadata_dict for dist in ENV.iter_installed_distributions()
-)
 PATH = os.path.join(user_config_dir("pip"), "template.md.j2")
 if not os.path.exists(PATH):
     PATH = os.path.join(
@@ -91,7 +86,7 @@ def search_package_names(
     package_names: dict[str, str] = {
         pkgname: NOT_FOUND
         for pkgname in (
-            [line for line in lines if line.startswith(name)]
+            [line for line in pkgnames if line.startswith(name)]
             if search
             else [name]
         )

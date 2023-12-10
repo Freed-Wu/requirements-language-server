@@ -1,11 +1,13 @@
 r"""Server
 ==========
 """
+import asyncio
 import os
 from typing import Any
 
 import tree_sitter_requirements as requirements
 from lsprotocol.types import (
+    INITIALIZE,
     TEXT_DOCUMENT_COMPLETION,
     TEXT_DOCUMENT_DEFINITION,
     TEXT_DOCUMENT_DID_CHANGE,
@@ -23,6 +25,7 @@ from lsprotocol.types import (
     DocumentLink,
     DocumentLinkParams,
     Hover,
+    InitializeParams,
     Location,
     MarkupContent,
     MarkupKind,
@@ -44,7 +47,11 @@ from .finders import (
     RepeatedPackageFinder,
 )
 from .misc.option import OPTIONS, OPTIONS_WITH_EQUAL
-from .packages import search_package_names
+from .packages.pypi import (
+    search_package_names,
+    update_metadata,
+    update_pkgnames,
+)
 
 try:
     import tomllib as tomli
@@ -67,6 +74,11 @@ class RequirementsLanguageServer(LanguageServer):
         """
         super().__init__(*args, **kwargs)
         self.trees = {}
+
+        @self.feature(INITIALIZE)
+        async def initialize(params: InitializeParams) -> None:
+            asyncio.create_task(update_pkgnames())
+            asyncio.create_task(update_metadata())
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
         @self.feature(TEXT_DOCUMENT_DID_CHANGE)
