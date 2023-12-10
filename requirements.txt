@@ -1,7 +1,5 @@
 #!/usr/bin/env -S pip install -r
 
-# update_package_names()
-pip-cache
 platformdirs
 tomli; python_version < "3.11"
 # get_completion_list_by_enum()
