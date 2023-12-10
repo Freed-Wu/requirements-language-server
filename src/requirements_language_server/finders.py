@@ -7,9 +7,8 @@ from typing import Any, Literal
 
 import tree_sitter_requirements as requirements
 from lsprotocol.types import Diagnostic, DiagnosticSeverity
-from pip_cache import get_package_names
 from tree_sitter import Node, Tree
-from tree_sitter_lsp import UNI, Finder
+from tree_sitter_lsp import UNI
 from tree_sitter_lsp.finders import (
     ErrorFinder,
     QueryFinder,
@@ -20,6 +19,7 @@ from tree_sitter_lsp.finders import (
 from tree_sitter_requirements._core import _language
 
 from . import FILETYPE
+from .packages import get_pkginfos
 from .utils import get_query
 
 
@@ -51,7 +51,7 @@ class InvalidPackageFinder(QueryFinder):
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such file",
+        message: str = "{{uni.get_text()}}: no such package",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -77,7 +77,7 @@ class InvalidPackageFinder(QueryFinder):
         node, _ = capture
         uni = UNI(uri, node)
         text = uni.get_text()
-        return uni if text not in get_package_names(text) else None
+        return uni if text not in get_pkginfos() else None
 
 
 @dataclass(init=False)
