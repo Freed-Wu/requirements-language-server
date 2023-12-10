@@ -47,11 +47,7 @@ from .finders import (
     RepeatedPackageFinder,
 )
 from .misc.option import OPTIONS, OPTIONS_WITH_EQUAL
-from .packages.pypi import (
-    search_package_names,
-    update_metadata,
-    update_pkgnames,
-)
+from .packages import get_pkginfos, render_document, update_pkginfos
 
 try:
     import tomllib as tomli
@@ -77,8 +73,7 @@ class RequirementsLanguageServer(LanguageServer):
 
         @self.feature(INITIALIZE)
         async def initialize(params: InitializeParams) -> None:
-            asyncio.create_task(update_pkgnames())
-            asyncio.create_task(update_metadata())
+            asyncio.create_task(update_pkginfos())
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
         @self.feature(TEXT_DOCUMENT_DID_CHANGE)
@@ -172,8 +167,8 @@ class RequirementsLanguageServer(LanguageServer):
             ]
 
         @self.feature(TEXT_DOCUMENT_HOVER)
-        def hover(params: TextDocumentPositionParams) -> Hover | None:
-            r"""Hover.
+        async def hover(params: TextDocumentPositionParams) -> Hover | None:
+            r"""Hover. ``render_document()`` is slow, so we use ``async``.
 
             :param params:
             :type params: TextDocumentPositionParams
@@ -192,11 +187,10 @@ class RequirementsLanguageServer(LanguageServer):
                     uni.get_range(),
                 )
             if uni.node.type == "package":
-                if doc := search_package_names(text, False)[text]:
-                    return Hover(
-                        MarkupContent(MarkupKind.Markdown, doc),
-                        uni.get_range(),
-                    )
+                return Hover(
+                    MarkupContent(MarkupKind.Markdown, render_document(text)),  # type: ignore
+                    uni.get_range(),
+                )
 
         @self.feature(TEXT_DOCUMENT_COMPLETION)
         def completions(params: CompletionParams) -> CompletionList:
@@ -226,7 +220,8 @@ class RequirementsLanguageServer(LanguageServer):
                             ),
                             insert_text=k,
                         )
-                        for k, doc in search_package_names(text).items()
+                        for k, doc in get_pkginfos().items()
+                        if k.startswith(text)
                     ],
                 )
             # uni.node.type != "option" due to incomplete

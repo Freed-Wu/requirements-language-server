@@ -1,20 +1,29 @@
-{{ metadata["summary"] }}
-- version: **{{ metadata["version"] }}**
-- license: {% if metadata["license"] %}**{{ metadata["license"] }}**{% endif %}
-- author: {{ info.author }} {% if metadata["author_email"] %}<mailto:{{ metadata["author_email"].split()[-1].strip("<>") }}>{% endif %}
-{%-if info %}
+{{ dist.metadata_dict["summary"] }}
+- version: **{{ dist.metadata_dict["version"] }}**
+- license: {% if dist.metadata_dict["license"] %}**{{ dist.metadata_dict["license"] }}**{% endif %}
+- author: {{ dist.metadata_dict["author"] }} {% if dist.metadata_dict["author_email"] %}\<<mailto:{{ dist.metadata_dict["author_email"].split()[-1].strip("<>") }}>\>{% endif %}
 - requires:
-  1. `python {{ metadata["requires_python"] }}`
-{%-for require in info.requires %}
+  1. `python {{ dist.metadata_dict["requires_python"] }}`
+{%-if requires == None %}
+  2. ...
+{%-else %}
+{%-for require in requires %}
   {{ loop.index + 1 }}. `{{ require }}`
 {%-endfor %}
+{%-endif %}
+- required_by:
+{%-if required_by == None %}
+  2. ...
 {%-else %}
+{%-for require in required_by %}
+  {{ loop.index }}. `{{ require }}`
+{%-endfor %}
 {%-endif %}
 - urls:
-{%-for url in metadata["project_url"] %}
+{%-for url in dist.metadata_dict["project_url"] %}
   {{ url.split(", ")[0].lower() }}: <{{ url.split(", ")[1] }}>
 {%-endfor %}
 - extras:
-{%-for extra in metadata["provides_extra"] %}
+{%-for extra in dist.metadata_dict["provides_extra"] %}
   {{ loop.index }}. *{{ extra }}*
 {%-endfor %}
