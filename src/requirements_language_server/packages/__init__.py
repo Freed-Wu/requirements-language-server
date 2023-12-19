@@ -2,17 +2,17 @@ r"""Packages
 ============
 """
 import os
+import re
 from threading import Thread
 from typing import Iterator
-from xmlrpc.client import ServerProxy
 
+from aiohttp import ClientSession, ClientTimeout
 from jinja2 import Template
 from pip._internal.metadata import get_default_environment
 from pip._internal.metadata.base import BaseDistribution
 from pip._vendor.packaging.utils import NormalizedName, canonicalize_name
-from platformdirs import user_cache_dir, user_config_dir
+from platformdirs import user_config_dir
 
-proxy = ServerProxy("https://pypi.python.org/pypi")
 pkginfos: dict[NormalizedName, str] = {}
 NOT_FOUND = "Not found installed package!"
 PATH = os.path.join(user_config_dir("pip"), "template.md.j2")
@@ -26,7 +26,6 @@ if not os.path.exists(PATH):
     )
 with open(PATH, "r") as f:
     TEMPLATE = f.read()
-CACHE_PATH = os.path.join(user_cache_dir("pip"), "requirements.txt")
 installed: dict[NormalizedName, BaseDistribution] = {
     dist.canonical_name: dist
     for dist in get_default_environment().iter_all_distributions()
@@ -56,37 +55,40 @@ def get_requiring_packages(current_dist: BaseDistribution) -> Iterator[str]:
     )
 
 
-def update_pkginfos() -> None:
+async def update_pkginfos(timeout: int = 3) -> None:
     r"""Update pkginfos.
 
+    :param timeout:
+    :type timeout: int
     :rtype: None
     """
     global pkginfos
     for pkgname in installed:
         Thread(target=render_document, args=(pkgname, False, False)).start()
-    Thread(target=update_pkgnames).start()
+    await update_pkgnames(timeout)
 
 
-def update_pkgnames():
-    r"""Update pkgnames."""
+async def update_pkgnames(timeout: int = 3):
+    r"""Update pkgnames. IO bound.
+
+    `<https://stackoverflow.com/questions/21419009/json-api-for-pypi-how-to-list-packages/51420285#51420285>`_
+
+    :param timeout:
+    :type timeout: int
+    """
     global pkginfos
-    is_updated = False
-    pkgnames: list[NormalizedName]
-    if os.path.isfile(CACHE_PATH):
-        with open(CACHE_PATH) as f:
-            pkgnames = [pkgname.strip() for pkgname in f.readlines()]  # type: ignore
-    else:
-        # IO bound
-        pkgnames = proxy.list_packages()  # type: ignore
-        is_updated = True
-    for pkgname in pkgnames:  # type: ignore
+    try:
+        async with ClientSession() as session:
+            async with session.get(
+                "https://pypi.org/simple", timeout=ClientTimeout(total=timeout)
+            ) as resp:
+                text = await resp.text()
+    except TimeoutError:
+        return
+    for match in re.finditer(r'"/simple/([^/]+)/"', text):
+        pkgname: NormalizedName = match.groups()[0]  # type: ignore
         if pkgname not in pkginfos:
             pkginfos[pkgname] = NOT_FOUND
-    if not is_updated:
-        pkgnames = proxy.list_packages()  # type: ignore
-        if pkgnames != []:
-            with open(CACHE_PATH, "w") as f:
-                f.writelines(pkgname + "\n" for pkgname in pkgnames)
 
 
 def render_document(
@@ -94,7 +96,7 @@ def render_document(
     has_requires: bool = True,
     has_required_by: bool = True,
 ):
-    r"""Render document.
+    r"""Render document. CPU bound.
 
     :param pkgname:
     :type pkgname: NormalizedName

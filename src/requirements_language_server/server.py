@@ -71,8 +71,10 @@ class RequirementsLanguageServer(LanguageServer):
         self.trees = {}
 
         @self.feature(INITIALIZE)
-        def initialize(params: InitializeParams) -> None:
-            update_pkginfos()
+        async def initialize(params: InitializeParams) -> None:
+            opts = params.initialization_options
+            timeout = getattr(opts, "timeout", 3)
+            await update_pkginfos(timeout)
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
         @self.feature(TEXT_DOCUMENT_DID_CHANGE)
