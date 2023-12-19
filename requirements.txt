@@ -1,5 +1,6 @@
 #!/usr/bin/env -S pip install -r
 
+aiohttp
 platformdirs
 tomli; python_version < "3.11"
 # get_completion_list_by_enum()
