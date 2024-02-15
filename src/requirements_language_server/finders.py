@@ -16,33 +16,10 @@ from tree_sitter_lsp.finders import (
     RepeatedFinder,
     UnsortedFinder,
 )
-from tree_sitter_requirements._core import _language
 
 from . import FILETYPE
 from .packages import get_pkginfos
 from .utils import get_query
-
-
-@dataclass(init=False)
-class ErrorRequirementsFinder(ErrorFinder):
-    r"""Errorrequirementsfinder."""
-
-    def __init__(
-        self,
-        message: str = "{{uni.get_text()}}: error",
-        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
-    ) -> None:
-        r"""Init.
-
-        :param filetype:
-        :type filetype: str
-        :param message:
-        :type message: str
-        :param severity:
-        :type severity: DiagnosticSeverity
-        :rtype: None
-        """
-        super().__init__(_language, message, severity)
 
 
 @dataclass(init=False)
@@ -289,7 +266,7 @@ FORMATTING_FINDER_CLASSES = [UnsortedRequirementFinder]
 
 
 DIAGNOSTICS_FINDER_CLASSES = [
-    ErrorRequirementsFinder,
+    ErrorFinder,
     InvalidPackageFinder,
     InvalidPathFinder,
     RepeatedPackageFinder,
