@@ -1,4 +1,5 @@
 r"""Test package"""
+
 from requirements_language_server.packages import NOT_FOUND, render_document
 
 

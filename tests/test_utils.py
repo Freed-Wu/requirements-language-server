@@ -1,11 +1,11 @@
 r"""Test utils."""
-import os
 
-from tree_sitter_lsp.diagnose import check
-from tree_sitter_requirements import parse
+import os
 
 from requirements_language_server.finders import DIAGNOSTICS_FINDER_CLASSES
 from requirements_language_server.utils import get_filetype
+from tree_sitter_lsp.diagnose import check
+from tree_sitter_requirements import parse
 
 
 class Test:
