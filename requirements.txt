@@ -1,8 +1,9 @@
 #!/usr/bin/env -S pip install -r
 
 aiohttp
+# ~/.config/pip/template.md.j2
 platformdirs
 tomli; python_version < "3.11"
-# get_completion_list_by_enum()
-tree-sitter-lsp >= 0.0.7
+# ErrorFinder
+tree-sitter-lsp >= 0.0.13
 tree-sitter-requirements
