@@ -1,4 +1,5 @@
 r"""Test server."""
+
 import os
 
 from requirements_language_server.server import RequirementsLanguageServer

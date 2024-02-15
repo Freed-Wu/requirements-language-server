@@ -1,10 +1,11 @@
 r"""Packages
 ============
 """
+
 import os
 import re
+from collections.abc import Iterator
 from threading import Thread
-from typing import Iterator
 
 from aiohttp import ClientSession, ClientTimeout
 from jinja2 import Template
@@ -24,7 +25,7 @@ if not os.path.exists(PATH):
         ),
         "template.md.j2",
     )
-with open(PATH, "r") as f:
+with open(PATH) as f:
     TEMPLATE = f.read()
 installed: dict[NormalizedName, BaseDistribution] = {
     dist.canonical_name: dist
@@ -78,11 +79,13 @@ async def update_pkgnames(timeout: int = 3):
     """
     global pkginfos
     try:
-        async with ClientSession() as session:
-            async with session.get(
+        async with (
+            ClientSession() as session,
+            session.get(
                 "https://pypi.org/simple", timeout=ClientTimeout(total=timeout)
-            ) as resp:
-                text = await resp.text()
+            ) as resp,
+        ):
+            text = await resp.text()
     except TimeoutError:
         return
     for match in re.finditer(r'"/simple/([^/]+)/"', text):

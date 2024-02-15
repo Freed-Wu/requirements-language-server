@@ -1,6 +1,7 @@
 r"""Finders
 ===========
 """
+
 import os
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -13,7 +14,6 @@ from tree_sitter_lsp.finders import (
     ErrorFinder,
     QueryFinder,
     RepeatedFinder,
-    TypeFinder,
     UnsortedFinder,
 )
 from tree_sitter_requirements._core import _language
@@ -187,9 +187,9 @@ class InvalidPathFinder(QueryFinder):
         :rtype: str
         """
         option = ""
-        if children := getattr(uni.node.parent, "children", None):
-            if len(children) > 0:
-                option = UNI.node2text(children[0])
+        children = getattr(uni.node.parent, "children", None)
+        if children and len(children) > 0:
+            option = UNI.node2text(children[0])
         return option
 
     def uni2diagnostic(self, uni: UNI) -> Diagnostic:
