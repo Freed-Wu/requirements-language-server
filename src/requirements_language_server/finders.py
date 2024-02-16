@@ -113,18 +113,7 @@ class InvalidPathFinder(QueryFinder):
         """
         query = get_query("path")
         super().__init__(query, message, severity)
-
-    @staticmethod
-    def get_option_type(option: str) -> Literal["file", "dir"]:
-        r"""Get option type.
-
-        :param option:
-        :type option: str
-        :rtype: Literal["file", "dir"]
-        """
-        if option in ["-e", "--editable"]:
-            return "dir"
-        return "file"
+        self.paths = {"file": [], "dir": []}
 
     def captures2unis(
         self, captures: list[tuple[Node, str]], uri: str
@@ -137,37 +126,27 @@ class InvalidPathFinder(QueryFinder):
         :type uri: str
         :rtype: list[UNI]
         """
-        kind = "file"
         unis = []
         for capture in captures:
             node, label = capture
             uni = UNI(uri, node)
-            if label == "option":
-                kind = self.get_option_type(uni.get_text())
-                continue
-            path = self.uni2path(uni)
+            path = uni.get_path()
             if (
-                kind == "file"
+                label == "file"
                 and not os.path.isfile(path)
-                or kind == "dir"
+                or label == "dir"
                 and not os.path.isdir(path)
             ):
                 unis += [uni]
+                self.paths[label] += [uni]
         return unis
 
-    @staticmethod
-    def get_option(uni: UNI) -> str:
-        r"""Get option.
-
-        :param uni:
-        :type uni: UNI
-        :rtype: str
-        """
-        option = ""
-        children = getattr(uni.node.parent, "children", None)
-        if children and len(children) > 0:
-            option = UNI.node2text(children[0])
-        return option
+    def get_type(self, uni: UNI) -> Literal["file", "dir"]:
+        try:
+            self.paths["file"].index(uni)
+            return "file"
+        except ValueError:
+            return "dir"
 
     def uni2diagnostic(self, uni: UNI) -> Diagnostic:
         r"""Uni2diagnostic.
@@ -179,7 +158,7 @@ class InvalidPathFinder(QueryFinder):
         return uni.get_diagnostic(
             self.message,
             self.severity,
-            _type=self.get_option_type(self.get_option(uni)),
+            _type=self.get_type(uni),
         )
 
 
