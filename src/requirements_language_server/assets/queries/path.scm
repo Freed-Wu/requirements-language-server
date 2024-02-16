@@ -1,5 +1,9 @@
 (
- (global_opt (option) @option (path) @path)
- (#match? @option "^-(r|c|e|-(requirement|constraint|editable))$")
+ (global_opt (option) @_option (path) @file)
+ (#match? @_option "^-(r|c|-(requirement|constraint))$")
 )
-; ex: filetype=query
+
+(
+ (global_opt (option) @_option (path) @dir)
+ (#match? @_option "^-(e|-editable)$")
+)
