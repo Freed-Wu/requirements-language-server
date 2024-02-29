@@ -16,8 +16,7 @@ permissions:
 
 env:
   PYTHONUTF8: "1"
-  # https://github.com/tree-sitter/py-tree-sitter/pull/161
-  python-version: "3.11"
+  python-version: 3.x
   cache: pip
 
 jobs:
@@ -28,8 +27,7 @@ jobs:
         runs-on:
           - ubuntu-latest
           - macos-latest
-          # https://github.com/brunobeltran/pip-cache/issues/7
-          # - windows-latest
+          - windows-latest
     runs-on: ${{matrix.runs-on}}
     steps:
       - uses: actions/checkout@v3
