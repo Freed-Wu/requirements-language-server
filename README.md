@@ -83,11 +83,10 @@ Features:
   open package's pypi homepage
 - [x] [Hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_hover)
   - [x] pip's options
-  - [x] package: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
+  - [x] package
 - [x] [Completion](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_completion):
   - [x] pip's options
-  - [x] package: requires [pip-cache](https://github.com/brunobeltran/pip-cache).
-    Must `pip-cache update` before.
+  - [x] package
 
 Other features:
 
@@ -131,3 +130,4 @@ to know more.
 - [bat](https://github.com/sharkdp/bat): syntax highlight for less
 - [requirements-txt-fixer](https://github.com/pre-commit/pre-commit-hooks#requirements-txt-fixer):
   sort package names
+- [pip-tools](https://github.com/jazzband/pip-tools): check `requirements.txt`
