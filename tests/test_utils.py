@@ -2,9 +2,9 @@ r"""Test utils."""
 
 import os
 
+from lsp_tree_sitter.diagnose import check
 from requirements_language_server.finders import DIAGNOSTICS_FINDER_CLASSES
 from requirements_language_server.utils import get_filetype
-from tree_sitter_lsp.diagnose import check
 from tree_sitter_requirements import parse
 
 

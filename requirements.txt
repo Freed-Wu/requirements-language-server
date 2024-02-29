@@ -1,9 +1,8 @@
 #!/usr/bin/env -S pip install -r
 
 aiohttp
+lsp-tree-sitter
 # ~/.config/pip/template.md.j2
 platformdirs
 tomli; python_version < "3.11"
-# ErrorFinder
-tree-sitter-lsp >= 0.0.13
 tree-sitter-requirements

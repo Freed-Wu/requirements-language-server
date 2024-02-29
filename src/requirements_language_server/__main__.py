@@ -56,8 +56,8 @@ def main() -> None:
     parser = get_parser()
     args = parser.parse_args()
 
-    from tree_sitter_lsp.diagnose import check
-    from tree_sitter_lsp.format import format
+    from lsp_tree_sitter.diagnose import check
+    from lsp_tree_sitter.format import format
     from tree_sitter_requirements import parse
 
     from .finders import DIAGNOSTICS_FINDER_CLASSES, FORMATTING_FINDER_CLASSES
