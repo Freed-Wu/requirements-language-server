@@ -6,6 +6,11 @@ import os
 from typing import Any
 
 import tree_sitter_requirements as requirements
+from lsp_tree_sitter import UNI
+from lsp_tree_sitter.complete import get_completion_list_by_uri
+from lsp_tree_sitter.diagnose import get_diagnostics
+from lsp_tree_sitter.finders import PositionFinder, TypeFinder
+from lsp_tree_sitter.format import get_text_edits
 from lsprotocol.types import (
     INITIALIZE,
     TEXT_DOCUMENT_COMPLETION,
@@ -33,11 +38,6 @@ from lsprotocol.types import (
     TextEdit,
 )
 from pygls.server import LanguageServer
-from tree_sitter_lsp import UNI
-from tree_sitter_lsp.complete import get_completion_list_by_uri
-from tree_sitter_lsp.diagnose import get_diagnostics
-from tree_sitter_lsp.finders import PositionFinder, TypeFinder
-from tree_sitter_lsp.format import get_text_edits
 
 from . import FILETYPE
 from .finders import (

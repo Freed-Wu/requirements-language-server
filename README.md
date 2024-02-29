@@ -115,6 +115,10 @@ Other features:
 
 ![file](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/da7e162d-fa82-461a-a8b4-09db684e766c)
 
+## How Does It Work
+
+See [here](https://github.com/neomutt/lsp-tree-sitter#usage).
+
 Read
 [![readthedocs](https://shields.io/readthedocs/requirements-language-server)](https://requirements-language-server.readthedocs.io)
 to know more.

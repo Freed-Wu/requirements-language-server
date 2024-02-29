@@ -7,15 +7,15 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import tree_sitter_requirements as requirements
-from lsprotocol.types import Diagnostic, DiagnosticSeverity
-from tree_sitter import Node, Tree
-from tree_sitter_lsp import UNI
-from tree_sitter_lsp.finders import (
+from lsp_tree_sitter import UNI
+from lsp_tree_sitter.finders import (
     ErrorFinder,
     QueryFinder,
     RepeatedFinder,
     UnsortedFinder,
 )
+from lsprotocol.types import Diagnostic, DiagnosticSeverity
+from tree_sitter import Node, Tree
 
 from . import FILETYPE
 from .packages import get_pkginfos
