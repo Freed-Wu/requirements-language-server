@@ -5,7 +5,7 @@ r"""Utils
 import os
 from typing import Literal
 
-from tree_sitter.binding import Query
+from tree_sitter import Query
 from tree_sitter_requirements._core import _language
 
 from . import FILETYPE
