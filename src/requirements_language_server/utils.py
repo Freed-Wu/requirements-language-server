@@ -5,12 +5,15 @@ r"""Utils
 import os
 from typing import Literal
 
-from tree_sitter import Query
-from tree_sitter_requirements._core import _language
+from tree_sitter import Parser, Query
+from tree_sitter_requirements._core import _language as language
 
 from . import FILETYPE
 
+SCHEMAS = {}
 QUERIES = {}
+parser = Parser()
+parser.set_language(language)
 
 
 def get_query(name: str) -> Query:
@@ -31,7 +34,7 @@ def get_query(name: str) -> Query:
             )
         ) as f:
             text = f.read()
-        QUERIES[name] = _language.query(text)
+        QUERIES[name] = language.query(text)
     return QUERIES[name]
 
 

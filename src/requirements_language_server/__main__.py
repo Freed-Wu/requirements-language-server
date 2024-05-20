@@ -58,17 +58,18 @@ def main() -> None:
 
     from lsp_tree_sitter.diagnose import check
     from lsp_tree_sitter.format import format
-    from tree_sitter_requirements import parse
 
     from .finders import DIAGNOSTICS_FINDER_CLASSES, FORMATTING_FINDER_CLASSES
-    from .utils import get_filetype
+    from .utils import get_filetype, parser
 
     if args.format or args.check:
-        format(args.format, parse, FORMATTING_FINDER_CLASSES, get_filetype)  # type: ignore
+        format(
+            args.format, parser.parse, FORMATTING_FINDER_CLASSES, get_filetype
+        )  # type: ignore
         exit(
             check(
                 args.check,
-                parse,
+                parser.parse,
                 DIAGNOSTICS_FINDER_CLASSES,
                 get_filetype,
                 args.color,

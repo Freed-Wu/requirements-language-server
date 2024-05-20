@@ -5,7 +5,6 @@ r"""Server
 import os
 from typing import Any
 
-import tree_sitter_requirements as requirements
 from lsp_tree_sitter import UNI
 from lsp_tree_sitter.complete import get_completion_list_by_uri
 from lsp_tree_sitter.diagnose import get_diagnostics
@@ -48,6 +47,7 @@ from .finders import (
 )
 from .misc.option import OPTIONS, OPTIONS_WITH_EQUAL
 from .packages import get_pkginfos, render_document, update_pkginfos
+from .utils import parser
 
 try:
     import tomllib as tomli
@@ -88,7 +88,7 @@ class RequirementsLanguageServer(LanguageServer):
             """
             filetype = self.get_filetype(params.text_document.uri)
             document = self.workspace.get_document(params.text_document.uri)
-            self.trees[document.uri] = requirements.parse(document.source)
+            self.trees[document.uri] = parser.parse(document.source.encode())
             diagnostics = get_diagnostics(
                 document.uri,
                 self.trees[document.uri],

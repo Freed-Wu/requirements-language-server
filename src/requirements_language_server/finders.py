@@ -6,7 +6,6 @@ import os
 from dataclasses import dataclass
 from typing import Any, Literal
 
-import tree_sitter_requirements as requirements
 from lsp_tree_sitter import UNI
 from lsp_tree_sitter.finders import (
     ErrorFinder,
@@ -19,7 +18,7 @@ from tree_sitter import Node, Tree
 
 from . import FILETYPE
 from .packages import get_pkginfos
-from .utils import get_query
+from .utils import get_query, parser
 
 
 @dataclass(init=False)
@@ -201,7 +200,7 @@ class RepeatedPackageFinder(RepeatedFinder):
         :type code: bytes
         :rtype: Tree
         """
-        return requirements.parse(code)
+        return parser.parse(code)
 
     def filter(self, uni: UNI) -> bool:
         r"""Filter.
