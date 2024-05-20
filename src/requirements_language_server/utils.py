@@ -5,14 +5,15 @@ r"""Utils
 import os
 from typing import Literal
 
-from tree_sitter import Parser, Query
-from tree_sitter_requirements._core import _language as language
+from tree_sitter import Language, Parser, Query
+from tree_sitter_requirements import language as get_language_ptr
 
 from . import FILETYPE
 
 SCHEMAS = {}
 QUERIES = {}
 parser = Parser()
+language = Language(get_language_ptr())
 parser.set_language(language)
 
 
