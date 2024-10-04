@@ -13,8 +13,7 @@ from . import FILETYPE
 SCHEMAS = {}
 QUERIES = {}
 parser = Parser()
-language = Language(get_language_ptr())
-parser.set_language(language)
+parser.language = Language(get_language_ptr())
 
 
 def get_query(name: str) -> Query:
@@ -35,7 +34,7 @@ def get_query(name: str) -> Query:
             )
         ) as f:
             text = f.read()
-        QUERIES[name] = language.query(text)
+        QUERIES[name] = parser.language.query(text)
     return QUERIES[name]
 
 
