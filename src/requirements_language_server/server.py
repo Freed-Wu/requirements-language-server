@@ -36,7 +36,7 @@ from lsprotocol.types import (
     TextDocumentPositionParams,
     TextEdit,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from . import FILETYPE
 from .finders import (
