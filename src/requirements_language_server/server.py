@@ -303,7 +303,9 @@ class RequirementsLanguageServer(LanguageServer):
         if file:
             files += [
                 os.path.abspath(
-                    os.path.realpath(UNI.join(pyproject_path, file))
+                    os.path.realpath(
+                        os.path.join(os.path.dirname(pyproject_path), file)
+                    )
                 )
             ]
         for value in dynamic.get("optional-dependencies", {}).values():
@@ -311,7 +313,9 @@ class RequirementsLanguageServer(LanguageServer):
             if file:
                 files += [
                     os.path.abspath(
-                        os.path.realpath(UNI.join(pyproject_path, file))
+                        os.path.realpath(
+                            os.path.join(os.path.dirname(pyproject_path), file)
+                        )
                     )
                 ]
         return files
