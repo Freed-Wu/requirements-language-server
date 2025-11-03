@@ -41,17 +41,10 @@ class InvalidPackageFinder(QueryFinder):
         query = get_query("package")
         super().__init__(query, message, severity)
 
-    def capture2uni(self, capture: tuple[Node, str], uri: str) -> UNI | None:
-        r"""Capture2uni.
-
-        :param capture:
-        :type capture: tuple[Node, str]
-        :param uri:
-        :type uri: str
-        :rtype: UNI | None
-        """
-        node, _ = capture
-        uni = UNI(uri, node)
+    def capture2uni(
+        self, label: str, nodes: list[Node], uri: str
+    ) -> UNI | None:
+        uni = UNI(uri, nodes[0])
         text = uni.get_text()
         return uni if text not in get_pkginfos() else None
 
