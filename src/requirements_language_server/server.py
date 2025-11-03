@@ -33,6 +33,7 @@ from lsprotocol.types import (
     Location,
     MarkupContent,
     MarkupKind,
+    PublishDiagnosticsParams,
     TextDocumentPositionParams,
     TextEdit,
 )
@@ -87,7 +88,9 @@ class RequirementsLanguageServer(LanguageServer):
             :rtype: None
             """
             filetype = self.get_filetype(params.text_document.uri)
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             self.trees[document.uri] = parser.parse(document.source.encode())
             diagnostics = get_diagnostics(
                 document.uri,
@@ -95,7 +98,12 @@ class RequirementsLanguageServer(LanguageServer):
                 DIAGNOSTICS_FINDER_CLASSES,
                 filetype,
             )
-            self.publish_diagnostics(params.text_document.uri, diagnostics)
+            self.text_document_publish_diagnostics(
+                PublishDiagnosticsParams(
+                    params.text_document.uri,
+                    diagnostics,
+                )
+            )
 
         @self.feature(TEXT_DOCUMENT_FORMATTING)
         def format(params: DocumentFormattingParams) -> list[TextEdit]:
@@ -105,7 +113,9 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: DocumentFormattingParams
             :rtype: list[TextEdit]
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             return get_text_edits(
                 document.uri,
                 self.trees[document.uri],
@@ -120,7 +130,9 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: TextDocumentPositionParams
             :rtype: list[Location]
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             uni = PositionFinder(params.position).find(
                 document.uri, self.trees[document.uri]
             )
@@ -138,7 +150,9 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: TextDocumentPositionParams
             :rtype: list[Location]
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             uni = PositionFinder(params.position).find(
                 document.uri, self.trees[document.uri]
             )
@@ -156,7 +170,9 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: DocumentLinkParams
             :rtype: list[DocumentLink]
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             finder = InvalidPackageFinder()
             return [
                 uni.get_document_link(
@@ -176,7 +192,9 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: TextDocumentPositionParams
             :rtype: Hover | None
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             uni = PositionFinder(params.position).find(
                 document.uri, self.trees[document.uri]
             )
@@ -202,7 +220,9 @@ class RequirementsLanguageServer(LanguageServer):
             :type params: CompletionParams
             :rtype: CompletionList
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             uni = PositionFinder(params.position, right_equal=True).find(
                 document.uri, self.trees[document.uri]
             )
@@ -241,7 +261,9 @@ class RequirementsLanguageServer(LanguageServer):
                         if x.startswith(text)
                     ],
                 )
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             return get_completion_list_by_uri(
                 text,
                 document.uri,
@@ -258,7 +280,7 @@ class RequirementsLanguageServer(LanguageServer):
         if self.workspace.root_uri is None:
             return "pip"
         pyproject_uri = os.path.join(self.workspace.root_uri, "pyproject.toml")
-        document = self.workspace.get_document(pyproject_uri)
+        document = self.workspace.get_text_document(pyproject_uri)
         pyproject_path = UNI.uri2path(document.uri)
         path = UNI.uri2path(uri)
         if path in self.get_dependencies_files(pyproject_path):
