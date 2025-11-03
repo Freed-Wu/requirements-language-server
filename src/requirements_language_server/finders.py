@@ -55,7 +55,7 @@ class InvalidPackageFinder(QueryFinder):
         :type uri: str
         :rtype: UNI | None
         """
-        uni = UNI(uri, nodes[0])
+        uni = UNI(nodes[0], uri)
         text = uni.text
         return uni if text not in get_pkginfos() else None
 
@@ -131,7 +131,7 @@ class InvalidPathFinder(QueryFinder):
         """
         unis = []
         for label, nodes in captures.items():
-            uni = UNI(uri, nodes[0])
+            uni = UNI(nodes[0], uri)
             path = uni.path
             if (
                 label == "file"
