@@ -44,6 +44,17 @@ class InvalidPackageFinder(QueryFinder):
     def capture2uni(
         self, label: str, nodes: list[Node], uri: str
     ) -> UNI | None:
+        r"""Capture2uni.
+
+        :param self:
+        :param label:
+        :type label: str
+        :param nodes:
+        :type nodes: list[Node]
+        :param uri:
+        :type uri: str
+        :rtype: UNI | None
+        """
         uni = UNI(uri, nodes[0])
         text = uni.get_text()
         return uni if text not in get_pkginfos() else None
@@ -108,7 +119,7 @@ class InvalidPathFinder(QueryFinder):
         self.paths = {"file": [], "dir": []}
 
     def captures2unis(
-        self, captures: list[tuple[Node, str]], uri: str
+        self, captures: dict[str, list[Node]], uri: str
     ) -> list[UNI]:
         r"""Captures2unis.
 
@@ -119,9 +130,8 @@ class InvalidPathFinder(QueryFinder):
         :rtype: list[UNI]
         """
         unis = []
-        for capture in captures:
-            node, label = capture
-            uni = UNI(uri, node)
+        for label, nodes in captures.items():
+            uni = UNI(uri, nodes[0])
             path = uni.get_path()
             if (
                 label == "file"
@@ -134,6 +144,13 @@ class InvalidPathFinder(QueryFinder):
         return unis
 
     def get_type(self, uni: UNI) -> Literal["file", "dir"]:
+        r"""Get type.
+
+        :param self:
+        :param uni:
+        :type uni: UNI
+        :rtype: Literal["file", "dir"]
+        """
         try:
             self.paths["file"].index(uni)
             return "file"
