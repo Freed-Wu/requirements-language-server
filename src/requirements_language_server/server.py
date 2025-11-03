@@ -5,7 +5,6 @@ r"""Server
 import os
 from typing import Any
 
-from lsp_tree_sitter import UNI
 from lsp_tree_sitter.complete import get_completion_list_by_uri
 from lsp_tree_sitter.diagnose import get_diagnostics
 from lsp_tree_sitter.finders import PositionFinder, TypeFinder
@@ -38,6 +37,7 @@ from lsprotocol.types import (
     TextEdit,
 )
 from pygls.lsp.server import LanguageServer
+from pygls.uris import to_fs_path
 
 from . import FILETYPE
 from .finders import (
@@ -279,9 +279,11 @@ class RequirementsLanguageServer(LanguageServer):
             return "pip"
         pyproject_uri = os.path.join(self.workspace.root_uri, "pyproject.toml")
         document = self.workspace.get_text_document(pyproject_uri)
-        pyproject_path = UNI.uri2path(document.uri)
-        path = UNI.uri2path(uri)
-        if path in self.get_dependencies_files(pyproject_path):
+        pyproject_path = to_fs_path(document.uri)
+        path = to_fs_path(uri)
+        if pyproject_path and path in self.get_dependencies_files(
+            pyproject_path
+        ):
             return "pep508"
         return "pip"
 
