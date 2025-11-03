@@ -27,7 +27,7 @@ class InvalidPackageFinder(QueryFinder):
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such package",
+        message: str = "{{uni.text}}: no such package",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -56,7 +56,7 @@ class InvalidPackageFinder(QueryFinder):
         :rtype: UNI | None
         """
         uni = UNI(uri, nodes[0])
-        text = uni.get_text()
+        text = uni.text
         return uni if text not in get_pkginfos() else None
 
 
@@ -103,7 +103,7 @@ class InvalidPathFinder(QueryFinder):
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: no such {{_type}}",
+        message: str = "{{uni.text}}: no such {{_type}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     ) -> None:
         r"""Init.
@@ -132,7 +132,7 @@ class InvalidPathFinder(QueryFinder):
         unis = []
         for label, nodes in captures.items():
             uni = UNI(uri, nodes[0])
-            path = uni.get_path()
+            path = uni.path
             if (
                 label == "file"
                 and not os.path.isfile(path)
@@ -177,7 +177,7 @@ class RepeatedPackageFinder(RepeatedFinder):
     def __init__(
         self,
         filetype: FILETYPE = "pip",
-        message: str = "{{uni.get_text()}}: is repeated on {{_uni}}",
+        message: str = "{{uni.text}}: is repeated on {{_uni}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
         r"""Init.
@@ -227,7 +227,7 @@ class UnsortedRequirementFinder(UnsortedFinder):
 
     def __init__(
         self,
-        message: str = "{{uni.get_text()}}: is unsorted due to {{_uni}}",
+        message: str = "{{uni.text}}: is unsorted due to {{_uni}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
         r"""Init.

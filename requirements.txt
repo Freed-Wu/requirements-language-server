@@ -1,7 +1,7 @@
 #!/usr/bin/env -S pip install -r
 
 aiohttp
-lsp-tree-sitter
+lsp-tree-sitter >= 0.1.0
 # ~/.config/pip/template.md.j2
 platformdirs
 pygls >= 2.0.0

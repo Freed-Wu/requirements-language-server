@@ -175,9 +175,7 @@ class RequirementsLanguageServer(LanguageServer):
             )
             finder = InvalidPackageFinder()
             return [
-                uni.get_document_link(
-                    "https://pypi.org/project/{{uni.get_text()}}"
-                )
+                uni.get_document_link("https://pypi.org/project/{{uni.text}}")
                 for uni in TypeFinder("package").find_all(
                     document.uri, self.trees[document.uri]
                 )
@@ -200,16 +198,16 @@ class RequirementsLanguageServer(LanguageServer):
             )
             if uni is None:
                 return None
-            text = uni.get_text()
+            text = uni.text
             if uni.node.type == "option":
                 return Hover(
                     MarkupContent(MarkupKind.PlainText, OPTIONS.get(text, "")),
-                    uni.get_range(),
+                    uni.range,
                 )
             if uni.node.type == "package":
                 return Hover(
                     MarkupContent(MarkupKind.Markdown, render_document(text)),  # type: ignore
-                    uni.get_range(),
+                    uni.range,
                 )
 
         @self.feature(TEXT_DOCUMENT_COMPLETION)
@@ -228,7 +226,7 @@ class RequirementsLanguageServer(LanguageServer):
             )
             if uni is None:
                 return CompletionList(False, [])
-            text = uni.get_text()
+            text = uni.text
 
             if uni.node.type == "package":
                 return CompletionList(
