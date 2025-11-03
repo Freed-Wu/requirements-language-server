@@ -6,6 +6,7 @@ import os
 import re
 from collections.abc import Iterator
 from threading import Thread
+from typing import cast
 
 from aiohttp import ClientSession, ClientTimeout
 from jinja2 import Template
@@ -89,7 +90,7 @@ async def update_pkgnames(timeout: int = 3):
     except TimeoutError:
         return
     for match in re.finditer(r'"/simple/([^/]+)/"', text):
-        pkgname: NormalizedName = match.groups()[0]  # type: ignore
+        pkgname = cast(NormalizedName, match.groups()[0])
         if pkgname not in pkginfos:
             pkginfos[pkgname] = NOT_FOUND
 
