@@ -116,7 +116,7 @@ Other features:
 
 ## How Does It Work
 
-See [here](https://github.com/neomutt/lsp-tree-sitter#usage).
+See [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter#usage).
 
 Read
 [![readthedocs](https://shields.io/readthedocs/requirements-language-server)](https://requirements-language-server.readthedocs.io)
