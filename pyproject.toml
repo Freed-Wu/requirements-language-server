@@ -1,6 +1,6 @@
 [project]
 name = "requirements-language-server"
-version = "0.1.1"
+version = "0.1.2"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,7 +12,7 @@ dependencies = [
   "jinja2>=3",
   "lsp-tree-sitter>=0.2.8",
   "marisa-trie>=1",
-  "pip>=26",
+  "pip>=25",
   "platformdirs>=4",
   "tree-sitter-requirements>=0.6.1",
 ]
