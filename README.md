@@ -40,59 +40,7 @@
 Language server for
 [requirements.txt](https://pip.pypa.io/en/stable/reference/requirements-file-format).
 
-Currently python's `requirement.txt` has 2 types:
-
-- [PEP508](https://peps.python.org/pep-0508): supported by:
-  - [setuptools](https://setuptools.pypa.io)
-- [pip](https://pip.pypa.io/en/stable/reference/requirements-file-format/#requirements-file-format):
-  supported by:
-  - [pip](https://pip.pypa.io)
-  - [pip-compile](https://github.com/jazzband/pip-tools)
-
-The difference is that
-[PEP508 doesn't support pip's options](https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata).
-
-For `pyproject.toml`:
-
-```toml
-[tool.setuptools.dynamic.dependencies]
-file = "requirements.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.dev]
-file = "requirements/dev.txt"
-```
-
-We recognize `requirements.txt` and `requirements/dev.txt` as PEP508's
-`requirements.txt`s and display errors for all pip's options. For other
-`requirements.txt`s, we recognize them as pip's `requirements.txt`s.
-
-Features:
-
-- [x] [Goto Definition](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_definition):
-  jump to first repeated package
-- [x] [Find References](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_references):
-  jump to all other repeated packages
-- [x] [Diagnostic](https://microsoft.github.io/language-server-protocol/specifications/specification-current#diagnostic):
-  - [x] repeated packages
-  - [x] unsorted packages
-  - [x] invalid path
-  - [x] pip's option when PEP508 is enabled
-- [x] [Document Formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_formatting):
-  sort packages
-- [x] [Document Link](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_documentLink):
-  open package's pypi homepage
-- [x] [Hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_hover)
-  - [x] pip's options
-  - [x] package
-- [x] [Completion](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_completion):
-  - [x] pip's options
-  - [x] package
-
-Other features:
-
-- [x] [pre-commit-hooks](https://pre-commit.com/)
-  - [x] linter
-  - [x] formatter
+Refer [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter).
 
 ## Screenshots
 
@@ -113,21 +61,3 @@ Other features:
 ![option](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/1a8de48c-9138-4a0c-97a4-0c7ea3030be0)
 
 ![file](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/da7e162d-fa82-461a-a8b4-09db684e766c)
-
-## How Does It Work
-
-See [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter#usage).
-
-Read
-[![readthedocs](https://shields.io/readthedocs/requirements-language-server)](https://requirements-language-server.readthedocs.io)
-to know more.
-
-## Related Projects
-
-- [requirements.txt.vim](https://github.com/raimon49/requirements.txt.vim):
-  syntax highlight for vim
-- [vim-polyglot](https://github.com/sheerun/vim-polyglot): contains above
-- [bat](https://github.com/sharkdp/bat): syntax highlight for less
-- [requirements-txt-fixer](https://github.com/pre-commit/pre-commit-hooks#requirements-txt-fixer):
-  sort package names
-- [pip-tools](https://github.com/jazzband/pip-tools): check `requirements.txt`

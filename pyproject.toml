@@ -1,82 +1,52 @@
-[build-system]
-requires = [
-  "setuptools_scm[toml] >= 6.2",
-  "setuptools-generate >= 0.0.6",
-]
-build-backend = "setuptools.build_meta"
-
-# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [project]
 name = "requirements-language-server"
-description = "requirements.txt language server"
+version = "0.1.0"
+description = "Add your description here"
 readme = "README.md"
-requires-python = ">= 3.10"
-keywords = ["requirements", "language server"]
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "Topic :: Software Development :: Build Tools",
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-  "Operating System :: Microsoft :: Windows",
-  "Operating System :: POSIX",
-  "Operating System :: Unix",
-  "Operating System :: MacOS",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Wu, Zhenyu", email = "wuzhenyu@ustc.edu" }]
+keywords = ["json schema", "language server", "tree sitter"]
+dependencies = [
+  "aiohttp>=3",
+  "jinja2>=3",
+  "lsp-tree-sitter>=0.2.8",
+  "marisa-trie>=1.4.1",
+  "pip>=26",
+  "platformdirs>=4",
+  "tree-sitter-requirements>=0.6.1",
 ]
-dynamic = ["version", "dependencies", "optional-dependencies"]
-
-[[project.authors]]
-name = "Wu, Zhenyu"
-email = "wuzhenyu@ustc.edu"
-
-[project.license]
-text = "GPL v3"
 
 [project.urls]
-Homepage = "https://requirements-language-server.readthedocs.io"
-Download = "https://github.com/Freed-Wu/requirements-language-server/releases"
 "Bug Report" = "https://github.com/Freed-Wu/requirements-language-server/issues"
+Download = "https://github.com/Freed-Wu/requirements-language-server/releases"
+Homepage = "https://requirements-language-server.readthedocs.io"
 Source = "https://github.com/Freed-Wu/requirements-language-server"
 
 [project.scripts]
 requirements-language-server = "requirements_language_server.__main__:main"
 
-[tool.setuptools.package-data]
-requirements_language_server = ["py.typed", "assets/**"]
+[project.optional-dependencies]
+dev = [
+  "pytest-cov>=7.1.0",
+]
 
-[tool.setuptools.data-files]
-"share/man/man1" = ["sdist/requirements-language-server.1"]
-"share/bash-completion/completions" = ["sdist/requirements-language-server"]
-"share/zsh/site-functions" = ["sdist/_requirements-language-server"]
+[build-system]
+requires = ["uv_build<0.12"]
+build-backend = "uv_build"
 
-[tool.setuptools.dynamic.dependencies]
-file = "requirements.txt"
-
-# begin: scripts/update-pyproject.toml.pl
-[tool.setuptools.dynamic.optional-dependencies.colorize]
-file = "requirements/colorize.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.dev]
-file = "requirements/dev.txt"
-# end: scripts/update-pyproject.toml.pl
-
-[tool.setuptools_scm]
-write_to = "src/requirements_language_server/_version.py"
-
-[tool.setuptools-generate]
-write-to = "src/requirements_language_server/_metainfo.py"
-
-[tool.mdformat]
-number = true
+[tool.coverage.report]
+exclude_lines = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+  "\\s*import tomli as tomllib",
+]
 
 [tool.doq]
 template_path = "templates"
+
+[tool.mdformat]
+number = true
 
 [tool.ruff]
 line-length = 79
@@ -102,15 +72,3 @@ preview = true
 [tool.ruff.format]
 docstring-code-format = true
 preview = true
-
-[tool.coverage.report]
-exclude_lines = [
-  "if TYPE_CHECKING:",
-  "if __name__ == .__main__.:",
-  "\\s*import tomli as tomllib",
-]
-
-[tool.cibuildwheel]
-archs = ["all"]
-before-test = "pip install pytest"
-test-command = "pytest {project}"

@@ -3,321 +3,89 @@ r"""Server
 """
 
 import os
-from typing import Any
 
-from lsp_tree_sitter.complete import get_completion_list_by_uri
-from lsp_tree_sitter.diagnose import get_diagnostics
-from lsp_tree_sitter.finders import PositionFinder, TypeFinder
-from lsp_tree_sitter.format import get_text_edits
-from lsprotocol.types import (
-    INITIALIZE,
-    TEXT_DOCUMENT_COMPLETION,
-    TEXT_DOCUMENT_DEFINITION,
-    TEXT_DOCUMENT_DID_CHANGE,
-    TEXT_DOCUMENT_DID_OPEN,
-    TEXT_DOCUMENT_DOCUMENT_LINK,
-    TEXT_DOCUMENT_FORMATTING,
-    TEXT_DOCUMENT_HOVER,
-    TEXT_DOCUMENT_REFERENCES,
-    CompletionItem,
-    CompletionItemKind,
-    CompletionList,
-    CompletionParams,
-    DidChangeTextDocumentParams,
-    DocumentFormattingParams,
-    DocumentLink,
-    DocumentLinkParams,
-    Hover,
-    InitializeParams,
-    Location,
-    MarkupContent,
-    MarkupKind,
-    PublishDiagnosticsParams,
-    TextDocumentPositionParams,
-    TextEdit,
-)
-from pygls.lsp.server import LanguageServer
-from pygls.uris import to_fs_path
+from lsp_tree_sitter.completer import PackageCompleter, SchemaCompleter
+from lsp_tree_sitter.linter import PackageLinter, PathLinter
+from lsp_tree_sitter.server import TreeSitterLanguageServer
+from pip._internal.commands import create_command
+from tree_sitter import Language, Parser
+from tree_sitter_requirements import language as get_language_ptr
+from tree_sitter_requirements import queries
 
-from . import FILETYPE
-from .finders import (
-    DIAGNOSTICS_FINDER_CLASSES,
-    FORMATTING_FINDER_CLASSES,
-    InvalidPackageFinder,
-    RepeatedPackageFinder,
-)
-from .misc.option import OPTIONS, OPTIONS_WITH_EQUAL
-from .packages import get_pkginfos, render_document, update_pkginfos
-from .utils import parser
-
-try:
-    import tomllib as tomli
-except ImportError:
-    import tomli
+from .searcher.pip import PipSearcher
 
 
-class RequirementsLanguageServer(LanguageServer):
-    r"""Requirements language server."""
+class RequirementsLanguageServer(TreeSitterLanguageServer):
+    def __init__(self, *args, **kwargs) -> None:
+        parser = Parser()
+        language = Language(get_language_ptr())
+        parser.language = language
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        r"""Init.
+        path_linter = PathLinter.from_queries(language, queries, "markup.link")
+        code_file = os.path.join(
+            os.path.dirname(__file__), "assets", "jq", "main.jq"
+        )
+        self.options = self.get_options()
 
-        :param self:
-        :param args:
-        :type args: Any
-        :param kwargs:
-        :type kwargs: Any
-        :rtype: None
-        """
-        super().__init__(*args, **kwargs)
-        self.trees = {}
+        def schema_gettter(path: str):
+            return self.options
 
-        @self.feature(INITIALIZE)
-        async def initialize(params: InitializeParams) -> None:
-            opts = params.initialization_options
-            timeout = getattr(opts, "timeout", 3)
-            await update_pkginfos(timeout)
+        schema_completer = SchemaCompleter.from_files(
+            code_file, schema_gettter
+        )
+        self.searcher = PipSearcher()
 
-        @self.feature(TEXT_DOCUMENT_DID_OPEN)
-        @self.feature(TEXT_DOCUMENT_DID_CHANGE)
-        def did_change(params: DidChangeTextDocumentParams) -> None:
-            r"""Did change.
+        def searcher_getter(path: str) -> PipSearcher:
+            return self.searcher
 
-            :param params:
-            :type params: DidChangeTextDocumentParams
-            :rtype: None
-            """
-            filetype = self.get_filetype(params.text_document.uri)
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            self.trees[document.uri] = parser.parse(document.source.encode())
-            diagnostics = get_diagnostics(
-                document.uri,
-                self.trees[document.uri],
-                DIAGNOSTICS_FINDER_CLASSES,
-                filetype,
-            )
-            self.text_document_publish_diagnostics(
-                PublishDiagnosticsParams(
-                    params.text_document.uri,
-                    diagnostics,
-                )
-            )
+        query = PackageLinter.queries_to_query(
+            language, queries, "highlights.scm"
+        )
+        package_linter = PackageLinter(query, searcher_getter)
+        package_completer = PackageCompleter(searcher_getter)
 
-        @self.feature(TEXT_DOCUMENT_FORMATTING)
-        def format(params: DocumentFormattingParams) -> list[TextEdit]:
-            r"""Format.
-
-            :param params:
-            :type params: DocumentFormattingParams
-            :rtype: list[TextEdit]
-            """
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            return get_text_edits(
-                document.uri,
-                self.trees[document.uri],
-                FORMATTING_FINDER_CLASSES,  # type: ignore
-            )
-
-        @self.feature(TEXT_DOCUMENT_DEFINITION)
-        def definition(params: TextDocumentPositionParams) -> list[Location]:
-            r"""Get definition.
-
-            :param params:
-            :type params: TextDocumentPositionParams
-            :rtype: list[Location]
-            """
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            uni = PositionFinder(params.position).find(
-                document.uri, self.trees[document.uri]
-            )
-            if uni is None:
-                return []
-            finder = RepeatedPackageFinder()
-            finder.find_all(document.uri, self.trees[document.uri])
-            return finder.get_definitions(uni)
-
-        @self.feature(TEXT_DOCUMENT_REFERENCES)
-        def references(params: TextDocumentPositionParams) -> list[Location]:
-            r"""Get references.
-
-            :param params:
-            :type params: TextDocumentPositionParams
-            :rtype: list[Location]
-            """
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            uni = PositionFinder(params.position).find(
-                document.uri, self.trees[document.uri]
-            )
-            if uni is None:
-                return []
-            finder = RepeatedPackageFinder()
-            finder.find_all(document.uri, self.trees[document.uri])
-            return finder.get_references(uni)
-
-        @self.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
-        def document_link(params: DocumentLinkParams) -> list[DocumentLink]:
-            r"""Get document links.
-
-            :param params:
-            :type params: DocumentLinkParams
-            :rtype: list[DocumentLink]
-            """
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            finder = InvalidPackageFinder()
-            return [
-                uni.get_document_link("https://pypi.org/project/{{uni.text}}")
-                for uni in TypeFinder("package").find_all(
-                    document.uri, self.trees[document.uri]
-                )
-                if finder(uni) is False
-            ]
-
-        @self.feature(TEXT_DOCUMENT_HOVER)
-        def hover(params: TextDocumentPositionParams) -> Hover | None:
-            r"""Hover. ``render_document()`` is slow, so we use ``async``.
-
-            :param params:
-            :type params: TextDocumentPositionParams
-            :rtype: Hover | None
-            """
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            uni = PositionFinder(params.position).find(
-                document.uri, self.trees[document.uri]
-            )
-            if uni is None:
-                return None
-            text = uni.text
-            if uni.node.type == "option":
-                return Hover(
-                    MarkupContent(MarkupKind.PlainText, OPTIONS.get(text, "")),
-                    uni.range,
-                )
-            if uni.node.type == "package":
-                return Hover(
-                    MarkupContent(MarkupKind.Markdown, render_document(text)),  # type: ignore
-                    uni.range,
-                )
-
-        @self.feature(TEXT_DOCUMENT_COMPLETION)
-        def completions(params: CompletionParams) -> CompletionList:
-            r"""Completions.
-
-            :param params:
-            :type params: CompletionParams
-            :rtype: CompletionList
-            """
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            uni = PositionFinder(params.position, right_equal=True).find(
-                document.uri, self.trees[document.uri]
-            )
-            if uni is None:
-                return CompletionList(False, [])
-            text = uni.text
-
-            if uni.node.type == "package":
-                return CompletionList(
-                    False,
-                    [
-                        CompletionItem(
-                            k,
-                            kind=CompletionItemKind.Module,
-                            documentation=MarkupContent(
-                                MarkupKind.Markdown, doc
-                            ),
-                            insert_text=k,
-                        )
-                        for k, doc in get_pkginfos().items()
-                        if k.startswith(text)
-                    ],
-                )
-            # uni.node.type != "option" due to incomplete
-            if text.startswith("-"):
-                return CompletionList(
-                    False,
-                    [
-                        CompletionItem(
-                            x,
-                            kind=CompletionItemKind.Keyword,
-                            documentation=doc,
-                            insert_text=x,
-                        )
-                        for x, doc in OPTIONS_WITH_EQUAL.items()
-                        if x.startswith(text)
-                    ],
-                )
-            document = self.workspace.get_text_document(
-                params.text_document.uri
-            )
-            return get_completion_list_by_uri(
-                text,
-                document.uri,
-                {"**/*.txt": "requirements", "*.txt": "requirements"},
-            )
-
-    def get_filetype(self, uri: str) -> FILETYPE:
-        r"""Get filetype.
-
-        :param uri:
-        :type uri: str
-        :rtype: FILETYPE
-        """
-        if self.workspace.root_uri is None:
-            return "pip"
-        pyproject_uri = os.path.join(self.workspace.root_uri, "pyproject.toml")
-        document = self.workspace.get_text_document(pyproject_uri)
-        pyproject_path = to_fs_path(document.uri)
-        path = to_fs_path(uri)
-        if pyproject_path and path in self.get_dependencies_files(
-            pyproject_path
-        ):
-            return "pep508"
-        return "pip"
+        super().__init__(
+            parser,
+            (path_linter, package_linter),
+            (schema_completer, package_completer),
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
-    def get_dependencies_files(pyproject_path: str) -> list[str]:
-        r"""Get dependencies files.
-
-        :param pyproject_path:
-        :type pyproject_path: str
-        :rtype: list[str]
-        """
-        if not os.access(pyproject_path, os.R_OK):
-            return []
-        with open(pyproject_path, "rb") as f:
-            data = tomli.load(f)
-        dynamic = data.get("tool", {}).get("setuptools", {}).get("dynamic", {})
-        files = []
-        file = dynamic.get("dependencies", {}).get("file")
-        if file:
-            files += [
-                os.path.abspath(
-                    os.path.realpath(
-                        os.path.join(os.path.dirname(pyproject_path), file)
-                    )
-                )
-            ]
-        for value in dynamic.get("optional-dependencies", {}).values():
-            file = value.get("file")
-            if file:
-                files += [
-                    os.path.abspath(
-                        os.path.realpath(
-                            os.path.join(os.path.dirname(pyproject_path), file)
-                        )
-                    )
-                ]
-        return files
+    def get_options(
+        whitelist: tuple[str, ...] = (
+            "-i",
+            "--index-url",
+            "--extra-index-url",
+            "--no-index",
+            "-c",
+            "--constraint",
+            "-r",
+            "--requirement",
+            "-e",
+            "--editable",
+            "-f",
+            "--find-links",
+            "--no-binary",
+            "--only-binary",
+            "--prefer-binary",
+            "--require-hashes",
+            "--pre",
+            "--trusted-host",
+            "--use-feature",
+            "--global-option",
+            "--config-settings",
+            "--hash",
+        ),
+    ):
+        r"""https://pip.pypa.io/en/stable/reference/requirements-file-format/#supported-options"""
+        return {
+            opt
+            + (
+                "=" if option.nargs and opt in option._long_opts else ""
+            ): option.help if option.help else ""
+            for option in create_command("install").parser.option_list_all
+            if (option._short_opts + option._long_opts)[0] in whitelist
+            for opt in option._short_opts + option._long_opts
+        }
