@@ -44,20 +44,10 @@ Refer [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter).
 
 ## Screenshots
 
-### Diagnostic
-
-![diagnostic](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/13aa466d-62af-423a-a141-880b495750a7)
-
 ### Hover
 
 ![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/03237cb6-72ce-4d2f-a879-db18d595fa39)
 
-![option](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/78a7b5ec-a9dd-46c2-b22b-4dc0123b6f0e)
-
 ### Completion
 
 ![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/0f1f9e31-3933-4f56-9cf9-5db6e044caca)
-
-![option](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/1a8de48c-9138-4a0c-97a4-0c7ea3030be0)
-
-![file](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/da7e162d-fa82-461a-a8b4-09db684e766c)
