@@ -13,4 +13,4 @@ autopep7 == 1.0.0
 # repeated package, repeated on ../requirements.txt
 platformdirs
 # unsorted package
-docutils
+jq >= 1.0.0

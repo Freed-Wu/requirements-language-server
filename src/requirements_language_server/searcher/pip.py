@@ -54,6 +54,13 @@ class PipSearcher(PackageSearcher):
     def get_package_url(self, name: str) -> str:
         return self.url_template.format(name)
 
+    def get_package_version(self, name: str) -> str:
+        return (
+            self.installed[name].metadata_dict["version"]
+            if name in self.installed
+            else ""
+        )
+
     def get_package_names(self, name: str) -> dict[str, str]:
         if self.trie is None:
             return {}
