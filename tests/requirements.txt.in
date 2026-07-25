@@ -5,12 +5,7 @@
 # illegal option
 -a
 
-# correct option and existent file
--r../requirements.txt
-
-# wrong package, correct name should be autopep8
-autopep7 == 1.0.0
-# repeated package, repeated on ../requirements.txt
+# wrong package, correct name should be jinja2
+jinja3 >= 3.0.0
 platformdirs
-# unsorted package
-jq >= 1.0.0
+aiohttp >= 3.0.0
