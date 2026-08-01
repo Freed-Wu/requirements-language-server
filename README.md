@@ -56,4 +56,4 @@ Refer [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter).
 
 - [pyproject](https://github.com/terror/pyproject): language server for
   `pyproject.toml`.
-- [uv](https://github.com/astral-sh/uv): inlay hints for `pyproject.toml`.
+- [ruff](https://github.com/astral-sh/ruff): inlay hints for `pyproject.toml`.
