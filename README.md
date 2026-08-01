@@ -54,6 +54,6 @@ Refer [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter).
 
 ## Related Projects
 
+- [tombi](https://github.com/tombi-toml/tombi/): language server for any TOML.
 - [pyproject](https://github.com/terror/pyproject): language server for
   `pyproject.toml`.
-- [ruff](https://github.com/astral-sh/ruff): inlay hints for `pyproject.toml`.
