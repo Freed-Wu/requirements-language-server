@@ -1,5 +1,5 @@
-r"""Pacman
-==========
+r"""Pip
+=======
 """
 
 import asyncio
