@@ -17,3 +17,4 @@ class Test:
     @staticmethod
     def test_searcher() -> None:
         assert server.searcher.installed != {}
+        assert server.searcher.get_package_document("pip")
