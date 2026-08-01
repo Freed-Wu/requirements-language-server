@@ -51,3 +51,9 @@ Refer [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter).
 ### Completion
 
 ![module](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/0f1f9e31-3933-4f56-9cf9-5db6e044caca)
+
+## Related Projects
+
+- [pyproject](https://github.com/terror/pyproject): language server for
+  `pyproject.toml`.
+- [uv](https://github.com/astral-sh/uv): inlay hints for `pyproject.toml`.
