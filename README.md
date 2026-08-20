@@ -1,6 +1,5 @@
 # requirements-language-server
 
-[![readthedocs](https://shields.io/readthedocs/requirements-language-server)](https://requirements-language-server.readthedocs.io)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Freed-Wu/requirements-language-server/main.svg)](https://results.pre-commit.ci/latest/github/Freed-Wu/requirements-language-server/main)
 [![github/workflow](https://github.com/Freed-Wu/requirements-language-server/actions/workflows/main.yml/badge.svg)](https://github.com/Freed-Wu/requirements-language-server/actions)
 [![codecov](https://codecov.io/gh/Freed-Wu/requirements-language-server/branch/main/graph/badge.svg)](https://codecov.io/gh/Freed-Wu/requirements-language-server)
@@ -39,8 +38,6 @@
 
 Language server for
 [requirements.txt](https://pip.pypa.io/en/stable/reference/requirements-file-format).
-
-Refer [lsp-tree-sitter](https://github.com/neomutt/lsp-tree-sitter).
 
 ## Screenshots
 
