@@ -12,10 +12,10 @@ from aiohttp import ClientSession, TCPConnector
 from jinja2 import Template
 from lsp_tree_sitter.completer import PackageSearcher
 from marisa_trie import Trie
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import canonicalize_name
 from pip._internal.metadata import get_default_environment
 from pip._internal.metadata.base import BaseDistribution
-from pip._vendor.packaging.requirements import InvalidRequirement, Requirement
-from pip._vendor.packaging.utils import canonicalize_name
 from platformdirs import user_config_path
 
 
@@ -24,11 +24,6 @@ def get_template(name: str = "requirements.md.jinja") -> Template:
     if not path.exists():
         path = Path(__file__).parent.parent / "assets" / "jinja" / name
     return Template(path.read_text())
-
-
-@dataclass
-class PypiRequirement:
-    name: str
 
 
 @dataclass
@@ -42,7 +37,7 @@ class PypiDistribution:
     ) -> Iterable[Requirement]:
         for require in self.requires_dist:
             try:
-                yield PypiRequirement(Requirement(require).name)
+                yield Requirement(require)
             except InvalidRequirement:
                 continue
 
@@ -128,6 +123,13 @@ class PipSearcher(PackageSearcher):
         return {
             pkgname: self.pkginfos[pkgname] for pkgname in self.trie.keys(name)
         }
+
+    @staticmethod
+    def get_package_name(name: str) -> str:
+        try:
+            return Requirement(name.strip()).name
+        except InvalidRequirement:
+            return name
 
     def get_package_document(self, name: str) -> str:
         if self.pkginfos[name] == "":

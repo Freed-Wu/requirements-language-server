@@ -18,3 +18,12 @@ class Test:
     def test_searcher() -> None:
         assert server.searcher.installed != {}
         assert server.searcher.get_package_document("pip")
+
+    @staticmethod
+    def test_get_package_name() -> None:
+        assert (
+            server.searcher.get_package_name(
+                "requests[socks]>=2.31 ; python_version < '3.13'"
+            )
+            == "requests"
+        )
